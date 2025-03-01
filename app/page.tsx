@@ -576,9 +576,9 @@ export default function Home() {
               <div className="mt-3 text-xs bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-700">
                 <p className="font-medium">Benefits include:</p>
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Early access to new features</li>
-                  <li>Exclusive airdrops</li>
-                  <li>Special governance rights</li>
+                  <li>Early access to new features (maybe)</li>
+                  <li>Exclusive airdrops (maybe)</li>
+                  <li>Special governance rights (maybe)</li>
                   <li>Community recognition</li>
                 </ul>
               </div>
@@ -1031,7 +1031,7 @@ export default function Home() {
           {/* Premium Footer - Update with timestamp and user */}
           <div className="text-center pt-3 border-t dark:border-gray-700 space-y-2">
             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Soneium OG Badge - Recognizing our earliest supporters 🏆
+              Soneium OG Badge🏆
             </div>
             <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-600 mt-1">
               <a
