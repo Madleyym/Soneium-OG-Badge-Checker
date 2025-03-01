@@ -1,28 +1,28 @@
 import "./globals.css";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
+import { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "Soneium OG Badge Checker",
-  description: "Check wallet eligibility for Soneium OG Badge",
-  keywords: "soneium, blockchain, web3, OG badge, crypto, wallet, eligibility",
-  authors: [{ name: "Soneium Labs" }],
-  viewport: "width=device-width, initial-scale=1",
+  description: "Check if your wallet is eligible for the Soneium OG Badge",
+  icons: {
+    icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode,
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-      </head>
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
