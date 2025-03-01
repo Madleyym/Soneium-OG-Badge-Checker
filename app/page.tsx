@@ -2,7 +2,6 @@
 
 import { AlertCircle } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import Head from "next/head";
 import Image from "next/image";
 import {
   CheckCircle,
@@ -22,6 +21,7 @@ import {
   Sun,
 } from "lucide-react";
 
+// Static imports instead of dynamic for better mobile compatibility
 const Icons = {
   CheckCircle,
   XCircle,
@@ -93,20 +93,38 @@ export default function Home() {
   const addressInputRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load saved state from localStorage on component mount
+  // Load saved state from localStorage on component mount - this needs to run only once
   useEffect(() => {
+    // Check if running in browser environment
     if (typeof window !== "undefined") {
+      // First check localStorage
       const savedDarkMode = localStorage.getItem("soneium-darkMode");
+
       if (savedDarkMode) {
-        setDarkMode(savedDarkMode === "true");
+        // Convert string to boolean
+        const isDark = savedDarkMode === "true";
+        setDarkMode(isDark);
+        // Apply class directly for immediate effect
+        if (isDark) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
       } else {
-        // Check system preference
+        // If no saved preference, check system preference
         const prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)"
         ).matches;
         setDarkMode(prefersDark);
+        // Apply class directly for immediate effect
+        if (prefersDark) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
       }
 
+      // Load history
       const savedHistory = localStorage.getItem("soneium-history");
       if (savedHistory) {
         try {
@@ -116,25 +134,30 @@ export default function Home() {
         }
       }
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
-  // Toggle dark mode
+  // Toggle dark mode - Fixed implementation
   const toggleDarkMode = useCallback(() => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("soneium-darkMode", newDarkMode.toString());
-    }
-  }, [darkMode]);
+    setDarkMode((prevMode) => {
+      const newMode = !prevMode;
 
-  // Set dark mode class on body
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
+      // Update localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("soneium-darkMode", String(newMode));
+      }
+
+      // Apply dark mode class immediately for better UX
+      if (typeof document !== "undefined") {
+        if (newMode) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+
+      return newMode;
+    });
+  }, []);
 
   // Detect mobile device - improved to run only on client
   useEffect(() => {
@@ -387,7 +410,7 @@ export default function Home() {
   };
 
   const openExplorer = (address: string) => {
-    window.open(`https://explorer.soneium.com/address/${address}`, "_blank");
+    window.open(`https://soneium.blockscout.com/address/${address}`, "_blank");
   };
 
   const downloadResults = () => {
@@ -454,20 +477,7 @@ export default function Home() {
 
   return (
     <>
-      <Head>
-        <title>Soneium OG Badge Eligibility Checker</title>
-        <meta
-          name="description"
-          content="Check if your wallet is eligible for the Soneium OG Badge"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head>
-
-      <main
-        className={`min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-950 px-2 py-3 sm:p-4 md:p-8 ${
-          darkMode ? "dark" : ""
-        }`}
-      >
+      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-950 px-2 py-3 sm:p-4 md:p-8">
         <div className="space-y-3 sm:space-y-4 bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-2xl shadow-lg border border-blue-100 dark:border-gray-700">
           {/* Header Section */}
           <div className="text-center mb-2">
