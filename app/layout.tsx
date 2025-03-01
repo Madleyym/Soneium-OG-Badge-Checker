@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Metadata, Viewport } from "next";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Soneium OG Badge Checker",
@@ -8,11 +8,8 @@ export const metadata: Metadata = {
     icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
     apple: [{ url: "/apple-icon.png" }],
   },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
+  // Add viewport information back to metadata
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
@@ -22,6 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Ensure favicon is loaded explicitly */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body>{children}</body>
     </html>
   );
