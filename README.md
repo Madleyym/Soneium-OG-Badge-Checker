@@ -1,9 +1,7 @@
 # Soneium OG Badge Eligibility Checker
 
-![Desktop View](app/assets/dekstop.png)
-![Mobile View](app/assets/mobile.png)
-
-![Soneium OG Badge](https://x.com/i/status/1895391135893475728)
+![Desktop View](./app/assets/dekstop.png)
+![Mobile View](./app/assets/mobile.png)
 
 A web-based tool to check if your wallet address is eligible for the Soneium OG Badge. The eligibility is determined based on transactions before block #3747022 on the Soneium blockchain.
 
