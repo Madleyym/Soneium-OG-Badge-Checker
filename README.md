@@ -2,8 +2,9 @@
 
 <div align="center">
   <img src="app/assets/dekstop.png" alt="Desktop View" style="max-width: 80%; margin-bottom: 20px;">
-  <img src="app/assets/mobile.png" alt="Mobile View" style="max-width: 15%; margin-top: 20px;">
+  <img src="app/assets/mobile.png" alt="Mobile View" style="max-width: 10%; margin-top: 40px;">
 </div>
+
 
 A web-based tool to check if your wallet address is eligible for the Soneium OG Badge. The eligibility is determined based on transactions before block #3747022 on the Soneium blockchain.
 
@@ -45,17 +46,6 @@ The Soneium OG Badge is a special recognition for early supporters and contribut
 2. Click "Check Eligibility" to verify all addresses
 3. Review the results showing which wallets are eligible
 4. Filter results or export as needed
-
-## 🖼️ Screenshots
-
-### Light Mode
-![Light Mode](https://i.imgur.com/VGz4nPm.png)
-
-### Dark Mode
-![Dark Mode](https://i.imgur.com/REdU7f9.png)
-
-### Results Dashboard
-![Results Dashboard](https://i.imgur.com/PdF5YaK.png)
 
 ## 🚀 Local Development
 
