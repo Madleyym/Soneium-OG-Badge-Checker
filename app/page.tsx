@@ -19,6 +19,9 @@ import {
   History,
   Moon,
   Sun,
+  Award,
+  Shield,
+  Star,
 } from "lucide-react";
 
 // Static imports instead of dynamic for better mobile compatibility
@@ -38,6 +41,9 @@ const Icons = {
   History,
   Moon,
   Sun,
+  Award,
+  Shield,
+  Star,
 };
 
 interface ResultItem {
@@ -46,6 +52,8 @@ interface ResultItem {
   message: string;
   transactions?: number;
   timestamp?: string;
+  premium?: boolean;
+  premiumReason?: string;
 }
 
 // Validate Ethereum address
@@ -92,6 +100,7 @@ export default function Home() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const historyButtonRef = useRef<HTMLButtonElement>(null);
 
   // Load saved state from localStorage on component mount - this needs to run only once
   useEffect(() => {
@@ -184,10 +193,20 @@ export default function Home() {
     }
   }, [showTip]);
 
-  // Scroll to results when they appear
+  // Scroll to results when they appear - using smooth scrolling with a fixed offset
   useEffect(() => {
     if (results.length > 0 && !isChecking && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Use a fixed offset to prevent position shifts
+      const yOffset = -20;
+      const y =
+        resultsRef.current.getBoundingClientRect().top +
+        window.pageYOffset +
+        yOffset;
+
+      window.scrollTo({
+        top: y,
+        behavior: "smooth",
+      });
     }
   }, [results, isChecking]);
 
@@ -200,7 +219,9 @@ export default function Home() {
           (result) =>
             result.address.toLowerCase().includes(lowercasedQuery) ||
             result.status.toLowerCase().includes(lowercasedQuery) ||
-            result.message.toLowerCase().includes(lowercasedQuery)
+            result.message.toLowerCase().includes(lowercasedQuery) ||
+            (result.premiumReason &&
+              result.premiumReason.toLowerCase().includes(lowercasedQuery))
         )
       );
     } else {
@@ -223,6 +244,26 @@ export default function Home() {
       }
     };
   }, []);
+
+  // Close history dropdown when clicking outside
+  useEffect(() => {
+    if (!showHistory) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        historyButtonRef.current &&
+        !historyButtonRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest(".history-dropdown")
+      ) {
+        setShowHistory(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showHistory]);
 
   const checkWallet = async (address: string): Promise<ResultItem> => {
     try {
@@ -259,6 +300,8 @@ export default function Home() {
         status: data.found ? "success" : "notfound",
         message: data.found ? `Found (${data.transactions} tx)` : "Not found",
         transactions: data.transactions || 0,
+        premium: data.premium || false,
+        premiumReason: data.premiumReason || "",
         timestamp,
       };
     } catch (error: any) {
@@ -403,6 +446,17 @@ export default function Home() {
     }
   };
 
+  const getPremiumBadgeIcon = (premium: boolean, reason?: string) => {
+    if (!premium) return null;
+
+    return (
+      <div className="relative" title={`Premium OG Badge: ${reason}`}>
+        <Icons.Award className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 dark:text-amber-400 shrink-0" />
+        <div className="absolute -top-1 -right-1 h-2 w-2 bg-amber-300 rounded-full animate-pulse"></div>
+      </div>
+    );
+  };
+
   const copyToClipboard = (address: string) => {
     navigator.clipboard.writeText(address);
     setCopiedAddress(address);
@@ -417,10 +471,12 @@ export default function Home() {
     if (!results.length) return;
 
     const csvContent = [
-      "Address,Status,Transactions,Timestamp",
+      "Address,Status,Transactions,PremiumBadge,PremiumReason,Timestamp",
       ...results.map(
         (r) =>
-          `${r.address},${r.status},${r.transactions || 0},${r.timestamp || ""}`
+          `${r.address},${r.status},${r.transactions || 0},${
+            r.premium || false
+          },${r.premiumReason || ""},${r.timestamp || ""}`
       ),
     ].join("\n");
 
@@ -451,19 +507,32 @@ export default function Home() {
 
   // Memoized calculations for summary
   const summaryStats = useMemo(() => {
-    if (!results.length) return { eligible: 0, notEligible: 0, errors: 0 };
+    if (!results.length)
+      return {
+        eligible: 0,
+        notEligible: 0,
+        errors: 0,
+        premium: 0,
+        eligiblePercent: 0,
+        notEligiblePercent: 0,
+        errorsPercent: 0,
+        premiumPercent: 0,
+      };
 
     const eligible = results.filter((r) => r.status === "success").length;
     const notEligible = results.filter((r) => r.status === "notfound").length;
     const errors = results.filter((r) => r.status === "error").length;
+    const premium = results.filter((r) => r.premium).length;
 
     return {
       eligible,
       notEligible,
       errors,
+      premium,
       eligiblePercent: Math.round((eligible / results.length) * 100),
       notEligiblePercent: Math.round((notEligible / results.length) * 100),
       errorsPercent: Math.round((errors / results.length) * 100),
+      premiumPercent: eligible > 0 ? Math.round((premium / eligible) * 100) : 0,
     };
   }, [results]);
 
@@ -478,7 +547,7 @@ export default function Home() {
   return (
     <>
       <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-950 px-2 py-3 sm:p-4 md:p-8">
-        <div className="space-y-3 sm:space-y-4 bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-2xl shadow-lg border border-blue-100 dark:border-gray-700">
+        <div className="space-y-3 sm:space-y-4 bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-2xl shadow-lg border border-blue-100 dark:border-gray-700 max-w-3xl w-full">
           {/* Header Section */}
           <div className="text-center mb-2">
             <div className="flex items-center justify-between mb-2">
@@ -496,13 +565,13 @@ export default function Home() {
                   <div className="absolute -top-1 -right-1 bg-green-500 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"></div>
                 </div>
                 <h1 className="ml-2 text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                  Soneium OG Badge Checker
+                  Soneium Badge Checker
                 </h1>
               </div>
 
               <button
                 onClick={toggleDarkMode}
-                className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-full"
+                className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-full transition-colors"
                 aria-label={
                   darkMode ? "Switch to light mode" : "Switch to dark mode"
                 }
@@ -516,10 +585,22 @@ export default function Home() {
             </div>
 
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 p-3 sm:p-4 rounded-xl border border-blue-100 dark:border-gray-600">
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium">
-                Check wallet eligibility for Soneium OG Badge
-              </p>
-              <div className="flex items-center justify-center mt-1 space-x-1">
+              <div className="flex flex-row items-center justify-between gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Icons.Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
+                  <p className="text-xs sm:text-sm md:text-base text-gray-700 dark:text-gray-300 font-medium">
+                    OG Badge
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Icons.Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400" />
+                  <p className="text-xs sm:text-sm md:text-base text-gray-700 dark:text-gray-300 font-medium">
+                    Premium OG Badge
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center mt-2 space-x-1">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Snapshot taken at block{" "}
                   <span className="font-mono bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded text-blue-800 dark:text-blue-300">
@@ -528,7 +609,7 @@ export default function Home() {
                 </p>
                 <button
                   onClick={() => setShowInfo(!showInfo)}
-                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                   aria-label="Show information"
                 >
                   <Icons.Info className="h-3.5 w-3.5" />
@@ -548,7 +629,7 @@ export default function Home() {
               </div>
               <button
                 onClick={() => setShowTip(false)}
-                className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-300"
+                className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                 aria-label="Close tip"
               >
                 <Icons.XCircle className="h-4 w-4" />
@@ -561,27 +642,60 @@ export default function Home() {
             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl p-3 sm:p-4 text-xs sm:text-sm text-blue-800 dark:text-blue-300 relative">
               <button
                 onClick={() => setShowInfo(false)}
-                className="absolute top-2 right-2 text-blue-500 hover:text-blue-700 dark:hover:text-blue-300"
+                className="absolute top-2 right-2 text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                 aria-label="Close information"
               >
                 <Icons.XCircle className="h-4 w-4" />
               </button>
-              <h3 className="font-semibold mb-2">About Soneium OG Badge</h3>
-              <p className="mb-2">
-                The Soneium OG Badge is a special recognition for early
-                supporters and contributors to the Soneium ecosystem. Eligible
-                wallets must have conducted transactions on the Soneium network
-                before block #3747022.
-              </p>
-              <div className="mt-3 text-xs bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-700">
-                <p className="font-medium">Benefits include:</p>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Early access to new features (maybe)</li>
-                  <li>Exclusive airdrops (maybe)</li>
-                  <li>Special governance rights (maybe)</li>
-                  <li>Community recognition</li>
-                </ul>
+
+              {/* Standard OG Badge */}
+              <div className="mb-4">
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Icons.Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-1.5" />
+                  Soneium OG Badge
+                </h3>
+                <p className="mb-2">
+                  The Soneium OG Badge is a special recognition for early
+                  supporters and contributors to the Soneium ecosystem. A total
+                  of 426,994 wallets are eligible to receive this Soulbound
+                  Badge.
+                </p>
+                <div className="mt-2 text-xs bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <p className="font-medium">Eligibility:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-1 pl-1">
+                    <li>
+                      Had transactions on the Soneium network before block
+                      #3747022
+                    </li>
+                    <li>Minimum of 45 transactions required</li>
+                  </ul>
+                </div>
               </div>
+
+              {/* Premium OG Badge */}
+              <div className="mb-4">
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Icons.Award className="h-4 w-4 text-amber-500 dark:text-amber-400 mr-1.5" />
+                  Premium OG Badge
+                </h3>
+                <p className="mb-2">
+                  The Premium OG Badge represents your outstanding commitment
+                  and unwavering belief in Soneium. This special badge
+                  recognizes users who went beyond to strengthen the foundation
+                  of the ecosystem.
+                </p>
+                <div className="mt-2 text-xs bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <p className="font-medium">
+                    Eligibility (any of the following):
+                  </p>
+                  <ul className="list-disc list-inside mt-1 space-y-1 pl-1">
+                    <li>Bridged 1 ETH via the native bridge</li>
+                    <li>Bridged ~70K ASTR (≈1 ETH) via Astar Network CCIP</li>
+                    <li>Bridged $2.5K USDC via the native bridge</li>
+                  </ul>
+                </div>
+              </div>
+
               <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800/50 rounded-lg">
                 <p className="font-medium">Snapshot Details:</p>
                 <div className="mt-1 font-mono text-[10px] sm:text-xs break-all">
@@ -596,7 +710,9 @@ export default function Home() {
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1">
-                    <span className="font-semibold">Eligible Wallets:</span>
+                    <span className="font-semibold">
+                      Eligible Wallets (OG):
+                    </span>
                     <span>426,994</span>
                   </div>
                 </div>
@@ -604,8 +720,17 @@ export default function Home() {
               <div className="mt-3 flex items-center">
                 <Icons.Clock className="h-4 w-4 mr-1.5" />
                 <span className="text-xs font-semibold">
-                  Last updated: March 01, 2025
+                  Last updated: March 02, 2025
                 </span>
+              </div>
+              <div className="mt-2 px-2 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30 text-amber-800 dark:text-amber-300 text-xs">
+                <div className="flex items-center">
+                  <Icons.Info className="h-3.5 w-3.5 mr-1" />
+                  <span>
+                    Both badges will be released in the first week of March 2025
+                    (Still under consideration, information not yet official)
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -623,8 +748,9 @@ export default function Home() {
             <div className="relative">
               <div className="flex justify-end mb-1">
                 <button
+                  ref={historyButtonRef}
                   onClick={() => setShowHistory(!showHistory)}
-                  className="text-xs flex items-center px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className="text-xs flex items-center px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   <Icons.History className="h-3 w-3 mr-1" />
                   History
@@ -636,16 +762,16 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* History Dropdown */}
+              {/* History Dropdown - Fixed positioning to prevent layout shifts */}
               {showHistory && (
-                <div className="absolute top-8 right-0 z-10 w-64 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-2 text-sm">
+                <div className="history-dropdown absolute top-8 right-0 z-10 w-64 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-2 text-sm">
                   <div className="flex justify-between items-center mb-2 pb-1 border-b border-gray-200 dark:border-gray-700">
                     <h4 className="font-medium text-gray-700 dark:text-gray-300">
                       Recently Checked
                     </h4>
                     <button
                       onClick={clearHistory}
-                      className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 flex items-center"
+                      className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 flex items-center transition-colors"
                       disabled={history.length === 0}
                     >
                       <Icons.Trash2 className="h-3 w-3 mr-1" />
@@ -662,13 +788,19 @@ export default function Home() {
                       {history.map((address, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded cursor-pointer"
+                          className="flex items-center justify-between py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded cursor-pointer transition-colors"
                           onClick={() => loadFromHistory(address)}
                         >
                           <span className="font-mono text-xs text-gray-600 dark:text-gray-300 truncate">
                             {address.slice(0, 10)}...{address.slice(-6)}
                           </span>
-                          <button className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400">
+                          <button
+                            className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(address);
+                            }}
+                          >
                             <Icons.Copy className="h-3 w-3" />
                           </button>
                         </div>
@@ -734,9 +866,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Progress Bar (visible when checking) */}
+          {/* Progress Bar (visible when checking) - Fixed height to prevent layout shifts */}
           {isChecking && (
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
               <div
                 className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
@@ -787,8 +919,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Results List */}
-              <div className="space-y-2 max-h-48 sm:max-h-64 md:max-h-96 overflow-y-auto pr-1 -mr-1 rounded-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+              {/* Results List - Fixed height to prevent layout shifts */}
+              <div className="space-y-2 max-h-[calc(min(40vh,32rem))] overflow-y-auto pr-1 -mr-1 rounded-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {filteredResults.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
                     {searchQuery
@@ -799,7 +931,7 @@ export default function Home() {
                   filteredResults.map((result, index) => (
                     <div
                       key={index}
-                      className={`flex items-center flex-wrap xs:flex-nowrap gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
+                      className={`flex flex-col xs:flex-row items-start xs:items-center gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
                         result.status === "success"
                           ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
                           : result.status === "notfound"
@@ -807,54 +939,69 @@ export default function Home() {
                           : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
                       }`}
                     >
-                      {getStatusIcon(result.status)}
+                      {/* First row for mobile / or first section for desktop */}
+                      <div className="flex items-center gap-2 w-full xs:w-auto">
+                        {getStatusIcon(result.status)}
+                        <span className="font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded-lg text-2xs xs:text-xs shadow-sm border-gray-200 dark:border-gray-700 border truncate max-w-[150px] text-gray-800 dark:text-gray-200">
+                          {result.address.slice(0, 6)}...
+                          {result.address.slice(-6)}
+                        </span>
+                      </div>
 
-                      <span className="font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded-lg text-2xs xs:text-xs shadow-sm border-gray-200 dark:border-gray-700 border truncate max-w-[120px] sm:max-w-none text-gray-800 dark:text-gray-200">
-                        {result.address.slice(0, 6)}...
-                        {result.address.slice(-6)}
-                      </span>
-
-                      <span
-                        className={`${
-                          result.status === "success"
-                            ? "text-green-600 dark:text-green-400"
-                            : result.status === "notfound"
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-yellow-600 dark:text-yellow-400"
-                        } ml-auto text-2xs xs:text-xs sm:text-sm font-medium whitespace-nowrap`}
-                      >
-                        {result.message}
-                      </span>
-
-                      {/* Timestamp */}
-                      <span className="text-2xs text-gray-500 dark:text-gray-400 hidden xs:inline ml-1">
-                        {formatDate(result.timestamp)}
-                      </span>
-
-                      {/* Action buttons */}
-                      <div className="flex space-x-1 ml-1">
-                        <button
-                          onClick={() => copyToClipboard(result.address)}
-                          className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          title="Copy address"
-                          aria-label="Copy address to clipboard"
+                      {/* Second row for mobile / middle section for desktop */}
+                      <div className="flex items-center gap-2 ml-0 xs:ml-auto">
+                        <span
+                          className={`${
+                            result.status === "success"
+                              ? "text-green-600 dark:text-green-400"
+                              : result.status === "notfound"
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-yellow-600 dark:text-yellow-400"
+                          } text-2xs xs:text-xs sm:text-sm font-medium whitespace-nowrap`}
                         >
-                          {copiedAddress === result.address ? (
-                            <span className="text-2xs xs:text-xs text-green-600 dark:text-green-400">
-                              Copied!
-                            </span>
-                          ) : (
-                            <Icons.Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 dark:text-gray-400" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => openExplorer(result.address)}
-                          className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          title="View on explorer"
-                          aria-label="View address on block explorer"
-                        >
-                          <Icons.ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400" />
-                        </button>
+                          {result.message}
+                        </span>
+
+                        {result.premium && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-2xs rounded-full border border-amber-200 dark:border-amber-800/50">
+                            <Icons.Star className="h-2.5 w-2.5" />
+                            Premium
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Third row for mobile / right section for desktop */}
+                      <div className="flex items-center gap-2 ml-0 xs:ml-2 mt-1 xs:mt-0 w-full xs:w-auto xs:whitespace-nowrap">
+                        {/* Timestamp */}
+                        <span className="text-2xs text-gray-500 dark:text-gray-400 mr-auto xs:mr-2">
+                          {formatDate(result.timestamp)}
+                        </span>
+
+                        {/* Action buttons */}
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => copyToClipboard(result.address)}
+                            className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            title="Copy address"
+                            aria-label="Copy address to clipboard"
+                          >
+                            {copiedAddress === result.address ? (
+                              <span className="text-2xs text-green-600 dark:text-green-400">
+                                Copied!
+                              </span>
+                            ) : (
+                              <Icons.Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 dark:text-gray-400" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => openExplorer(result.address)}
+                            className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            title="View on explorer"
+                            aria-label="View address on block explorer"
+                          >
+                            <Icons.ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -869,7 +1016,7 @@ export default function Home() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                   <div className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 rounded-xl border border-green-200 dark:border-green-800/50 shadow-sm">
                     <div className="text-green-600 dark:text-green-400 font-medium text-xs sm:text-sm flex items-center">
                       <Icons.CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
@@ -880,6 +1027,19 @@ export default function Home() {
                     </div>
                     <div className="text-xs text-green-600 dark:text-green-400 mt-1">
                       {summaryStats.eligiblePercent}% of total
+                    </div>
+                  </div>
+
+                  <div className="p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-900/30 rounded-xl border border-amber-200 dark:border-amber-800/50 shadow-sm">
+                    <div className="text-amber-600 dark:text-amber-400 font-medium text-xs sm:text-sm flex items-center">
+                      <Icons.Award className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      Premium OG
+                    </div>
+                    <div className="text-lg sm:text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-500 mt-1">
+                      {summaryStats.premium}
+                    </div>
+                    <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      {summaryStats.premiumPercent}% of eligible
                     </div>
                   </div>
 
@@ -910,7 +1070,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Visual Representation */}
+                {/* Visual Representation - Fixed height to prevent layout shifts */}
                 <div className="mt-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-gray-700">
                   <div className="relative pt-1">
                     <div className="flex mb-2 items-center justify-between">
@@ -963,11 +1123,59 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+
+                {/* Premium Badge Distribution (only if there are eligible addresses) */}
+                {summaryStats.eligible > 0 && (
+                  <div className="mt-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-gray-700">
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold inline-block text-amber-600 dark:text-amber-400">
+                            Premium OG Badge
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-semibold inline-block text-amber-600 dark:text-amber-400">
+                            {summaryStats.premium} of {summaryStats.eligible}{" "}
+                            eligible addresses
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex h-4 mb-2 overflow-hidden text-xs rounded-full">
+                        <div
+                          style={{
+                            width: `${summaryStats.premiumPercent}%`,
+                          }}
+                          className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-500 dark:bg-amber-600 transition-all duration-500"
+                        ></div>
+                        <div
+                          style={{
+                            width: `${
+                              100 - (summaryStats.premiumPercent || 0)
+                            }%`,
+                          }}
+                          className="flex flex-col text-center whitespace-nowrap text-gray-600 justify-center bg-gray-200 dark:bg-gray-600 transition-all duration-500"
+                        ></div>
+                      </div>
+
+                      {/* Legend */}
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        <div className="flex items-center">
+                          <div className="h-3 w-3 bg-amber-500 dark:bg-amber-600 rounded mr-1"></div>
+                          <span>Premium OG Badge</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
+                          <span>Regular OG Badge</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* FAQ Section (Collapsible) */}
           <div className="border-t dark:border-gray-700 pt-3 mt-2">
             <details className="group">
               <summary className="flex justify-between items-center font-medium cursor-pointer text-sm text-gray-600 dark:text-gray-300">
@@ -976,53 +1184,200 @@ export default function Home() {
                   <Icons.ChevronDown className="h-4 w-4" />
                 </span>
               </summary>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-3 space-y-2 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                <div>
-                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-                    What is the Soneium OG Badge?
-                  </h3>
-                  <p className="mt-1">
-                    A special recognition for the earliest supporters and active
-                    participants in the Soneium ecosystem.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-                    How do I qualify?
-                  </h3>
-                  <p className="mt-1">
-                    You need to have had transactions on the Soneium network
-                    before block #3747022.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-                    Can I check multiple wallets?
-                  </h3>
-                  <p className="mt-1">
-                    Yes, enter multiple addresses (one per line) to check in
-                    batch mode.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-                    When will badges be distributed?
-                  </h3>
-                  <p className="mt-1">
-                    OG Badge distribution date is TBA. Eligible wallets will
-                    receive an NFT badge directly to their wallet once the date
-                    is confirmed.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-                    How accurate is this checker?
-                  </h3>
-                  <p className="mt-1">
-                    This checker uses publicly available Soneium blockchain data
-                    to determine eligibility, providing accurate results based
-                    on the snapshot at block #3747022.
-                  </p>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-3 space-y-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                {/* Question 1 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>What is the Soneium OG Badge?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p>
+                      A special recognition for the earliest supporters and
+                      active participants in the Soneium ecosystem. This badge
+                      symbolizes your early involvement in building and
+                      supporting the network's foundation.
+                    </p>
+                  </div>
+                </details>
+
+                {/* Question 2 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>
+                      What is the difference between OG Badge and Premium OG
+                      Badge?
+                    </span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p className="mb-2">
+                      The badges represent different levels of participation in
+                      the Soneium ecosystem:
+                    </p>
+                    <ul className="space-y-1 pl-2">
+                      <li className="flex items-baseline">
+                        <span className="text-blue-600 dark:text-blue-400 mr-2">
+                          -
+                        </span>
+                        <span>
+                          <span className="font-medium">OG Badge</span>: For
+                          early users with at least 45 transactions before block
+                          #3747022.
+                        </span>
+                      </li>
+                      <li className="flex items-baseline">
+                        <span className="text-amber-500 dark:text-amber-400 mr-2">
+                          -
+                        </span>
+                        <span>
+                          <span className="font-medium">Premium OG Badge</span>:
+                          An additional recognition for users who made
+                          significant contributions through bridging assets.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </details>
+
+                {/* Question 3 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>How do I qualify for the Premium OG Badge?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p className="mb-2">
+                      You need to have met one of these criteria before the
+                      snapshot at block #3747022:
+                    </p>
+                    <ul className="space-y-1 pl-2">
+                      <li className="flex items-baseline">
+                        <span className="text-amber-500 dark:text-amber-400 mr-2">
+                          -
+                        </span>
+                        <span>Bridged 1 ETH via the native bridge</span>
+                      </li>
+                      <li className="flex items-baseline">
+                        <span className="text-amber-500 dark:text-amber-400 mr-2">
+                          -
+                        </span>
+                        <span>
+                          Bridged ~70K ASTR (≈1 ETH) via Astar Network CCIP
+                        </span>
+                      </li>
+                      <li className="flex items-baseline">
+                        <span className="text-amber-500 dark:text-amber-400 mr-2">
+                          -
+                        </span>
+                        <span>Bridged $2.5K USDC via the native bridge</span>
+                      </li>
+                    </ul>
+                  </div>
+                </details>
+
+                {/* Question 4 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>Can I check multiple wallets?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p>
+                      Yes, you can check multiple addresses simultaneously by
+                      entering them one per line in the input field. This batch
+                      checking allows you to efficiently verify eligibility
+                      across all your wallets.
+                    </p>
+                  </div>
+                </details>
+
+                {/* Question 5 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>When will badges be distributed?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p>
+                      Both OG Badge and Premium OG Badge will be distributed in
+                      the first week of March 2025 as Soulbound tokens. These
+                      non-transferable tokens will permanently recognize your
+                      early contributions to the Soneium ecosystem.
+                    </p>
+                  </div>
+                </details>
+
+                {/* Question 6 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>How accurate is this checker?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p>
+                      This checker uses publicly available Soneium blockchain
+                      data to determine eligibility, providing accurate results
+                      based on the snapshot at block #3747022. The verification
+                      process includes:
+                    </p>
+                    <ul className="mt-1 space-y-1 pl-2">
+                      <li className="flex items-baseline">
+                        <span className="text-blue-600 dark:text-blue-400 mr-2">
+                          -
+                        </span>
+                        <span>Transaction history verification</span>
+                      </li>
+                      <li className="flex items-baseline">
+                        <span className="text-blue-600 dark:text-blue-400 mr-2">
+                          -
+                        </span>
+                        <span>Bridge activity analysis</span>
+                      </li>
+                      <li className="flex items-baseline">
+                        <span className="text-blue-600 dark:text-blue-400 mr-2">
+                          -
+                        </span>
+                        <span>Exact transaction count confirmation</span>
+                      </li>
+                    </ul>
+                  </div>
+                </details>
+
+                {/* Question 7 */}
+                <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
+                    <span>What's the minimum transaction requirement?</span>
+                    <span className="transition-transform group-open/item:rotate-180">
+                      <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </span>
+                  </summary>
+                  <div className="mt-2 pl-2 text-justify">
+                    <p>
+                      A minimum of{" "}
+                      <span className="font-semibold">45 transactions</span>{" "}
+                      before block #3747022 is required to be eligible for the
+                      OG Badge. This threshold was established to recognize
+                      users who have been actively engaging with the Soneium
+                      network during its early stages.
+                    </p>
+                  </div>
+                </details>
+
+                <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-blue-700 dark:text-blue-300 text-xs italic border border-blue-100 dark:border-blue-800/50 text-center">
+                  Last updated: March 02, 2025
                 </div>
               </div>
             </details>
@@ -1031,7 +1386,7 @@ export default function Home() {
           {/* Premium Footer - Update with timestamp and user */}
           <div className="text-center pt-3 border-t dark:border-gray-700 space-y-2">
             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Soneium OG Badge🏆
+              Soneium Badge Checker - Last updated on March 02, 2025
             </div>
             <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-600 mt-1">
               <a
@@ -1048,9 +1403,9 @@ export default function Home() {
               </a>
               <a
                 href="#"
-                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full"
+                className="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full"
               >
-                #Web3
+                #PremiumOG
               </a>
             </div>
           </div>
