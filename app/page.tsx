@@ -1368,20 +1368,6 @@ export default function Home() {
                                 45 tx = Basic Eligibility
                               </div>
                             </div>
-                            <div className="flex-1 bg-white dark:bg-gray-800 p-2 rounded border-l-4 border-green-400 dark:border-green-500">
-                              <span className="text-xs font-medium">
-                                Better
-                              </span>
-                              <div className="font-mono mt-1">
-                                100+ tx = Strong Supporter
-                              </div>
-                            </div>
-                            <div className="flex-1 bg-white dark:bg-gray-800 p-2 rounded border-l-4 border-blue-400 dark:border-blue-500">
-                              <span className="text-xs font-medium">Best</span>
-                              <div className="font-mono mt-1">
-                                250+ tx = Elite Contributor
-                              </div>
-                            </div>
                           </div>
                         </div>
                       </div>
