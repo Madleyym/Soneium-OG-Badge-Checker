@@ -1289,9 +1289,18 @@ export default function Home() {
                       will be excluded from this count.
                     </p>
                     <p className="mb-2">
-                      You can check your transaction status on the Soneium Block
-                      Explorer.
+                      You can check your transaction status on the{" "}
+                      <a
+                        href="https://soneium.blockscout.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        Soneium Block Explorer
+                      </a>
+                      .
                     </p>
+
                     <div className="bg-blue-50 dark:bg-blue-900/30 p-3 mt-2 rounded-lg border border-blue-100 dark:border-blue-800">
                       <p className="font-medium text-blue-700 dark:text-blue-300">
                         How to verify your transaction count:
@@ -1557,39 +1566,96 @@ export default function Home() {
                     </p>
                   </div>
                 </details>
-
-                <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-blue-700 dark:text-blue-300 text-xs italic border border-blue-100 dark:border-blue-800/50 text-center">
-                  Last updated: March 02, 2025
-                </div>
               </div>
             </details>
           </div>
 
-          {/* Premium Footer - Update with timestamp and user */}
-          <div className="text-center pt-3 border-t dark:border-gray-700 space-y-2">
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Soneium Badge Checker - Last updated on March 02, 2025
+          {/* Ultra Premium Footer - Luxurious styling with advanced effects */}
+          <div className="text-center pt-4 relative">
+            {/* Animated premium gradient top border */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-indigo-600 to-amber-400 dark:from-blue-500 dark:via-indigo-400 dark:to-amber-300 animate-pulse"></div>
+
+            {/* Subtle background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/20 dark:to-gray-900/20 rounded-b-lg"></div>
+
+            <div className="space-y-4 pt-2 relative">
+              {/* Premium version badge */}
+              <div className="inline-block bg-gradient-to-r from-blue-50 to-amber-50 dark:from-gray-800 dark:to-gray-700 px-4 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-300">
+                <span className="text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                  PREMIUM VERSION 1.5
+                </span>
+              </div>
+
+              {/* Official statement about social media */}
+              <p className="text-xs text-gray-600 dark:text-gray-400 italic font-light max-w-sm mx-auto">
+                Official Soneium social media channels:
+              </p>
+
+              {/* Social media links with consistent styling */}
+              <div className="flex items-center justify-center space-x-5">
+                {/* Website */}
+                <a
+                  href="https://soneium.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-md px-3 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center"
+                >
+                  🌐 <span className="ml-1">Website</span>
+                </a>
+
+                {/* X (Twitter) */}
+                <a
+                  href="https://x.com/soneium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-md px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center"
+                >
+                  🐦 <span className="ml-1">X @soneium</span>
+                </a>
+
+                {/* Discord */}
+                <a
+                  href="https://discord.com/invite/soneium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-md px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center"
+                >
+                  🔮 <span className="ml-1">Discord</span>
+                </a>
+              </div>
+
+              {/* Hashtags */}
+              <div className="flex flex-wrap justify-center gap-2 text-xs mt-3">
+                <a
+                  href="#"
+                  className="text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white transition-all duration-300 bg-blue-50 hover:bg-blue-600 dark:bg-blue-900/40 dark:hover:bg-blue-600 px-3 py-1.5 rounded-full shadow-sm hover:shadow-lg border border-blue-200 dark:border-blue-700 font-medium"
+                >
+                  #SoneiumOG
+                </a>
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-white transition-all duration-300 bg-indigo-50 hover:bg-indigo-600 dark:bg-indigo-900/40 dark:hover:bg-indigo-600 px-3 py-1.5 rounded-full shadow-sm hover:shadow-lg border border-indigo-200 dark:border-indigo-700 font-medium"
+                >
+                  #SONEIUMcosystem
+                </a>
+                <a
+                  href="#"
+                  className="text-amber-600 hover:text-white dark:text-amber-400 dark:hover:text-white transition-all duration-300 bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-500 hover:to-yellow-500 dark:from-amber-900/40 dark:to-yellow-900/40 dark:hover:from-amber-600 dark:hover:to-yellow-600 px-3 py-1.5 rounded-full shadow-sm hover:shadow-lg border border-amber-200 dark:border-amber-700 font-medium"
+                >
+                  #PremiumOG
+                </a>
+              </div>
+
+              {/* Copyright */}
+              <div className="text-xs text-gray-500 dark:text-gray-400 font-light pt-1 pb-2">
+                <span className="opacity-75">© 2025 Soneium</span>
+                <span className="mx-1.5 opacity-50">•</span>
+                <span className="opacity-75">Premium Experience</span>
+              </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-600 mt-1">
-              <a
-                href="#"
-                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full"
-              >
-                #SoneiumOG
-              </a>
-              <a
-                href="#"
-                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full"
-              >
-                #SONEEcosystem
-              </a>
-              <a
-                href="#"
-                className="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full"
-              >
-                #PremiumOG
-              </a>
-            </div>
+
+            {/* Bottom premium gradient accent */}
+            <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent dark:via-amber-500 opacity-50"></div>
           </div>
         </div>
       </main>
