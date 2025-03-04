@@ -1579,13 +1579,6 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/20 dark:to-gray-900/20 rounded-b-lg"></div>
 
             <div className="space-y-4 pt-2 relative">
-              {/* Premium version badge */}
-              <div className="inline-block bg-gradient-to-r from-blue-50 to-amber-50 dark:from-gray-800 dark:to-gray-700 px-4 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-300">
-                <span className="text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                  PREMIUM VERSION 1.5
-                </span>
-              </div>
-
               {/* Official statement about social media */}
               <p className="text-xs text-gray-600 dark:text-gray-400 italic font-light max-w-sm mx-auto">
                 Official Soneium social media channels:
@@ -1648,9 +1641,12 @@ export default function Home() {
 
               {/* Copyright */}
               <div className="text-xs text-gray-500 dark:text-gray-400 font-light pt-1 pb-2">
-                <span className="opacity-75">© 2025 Soneium</span>
-                <span className="mx-1.5 opacity-50">•</span>
-                <span className="opacity-75">Premium Experience</span>
+                {/* Premium version badge */}
+                <div className="inline-block bg-gradient-to-r from-blue-50 to-amber-50 dark:from-gray-800 dark:to-gray-700 px-4 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-300">
+                  <span className="text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                    V-2.0.1
+                  </span>
+                </div>
               </div>
             </div>
 
