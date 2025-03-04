@@ -919,7 +919,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Results List - Fixed height to prevent layout shifts */}
+              {/* Results List - Updated to include detailed transaction information */}
               <div className="space-y-2 max-h-[calc(min(40vh,32rem))] overflow-y-auto pr-1 -mr-1 rounded-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {filteredResults.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
@@ -931,7 +931,7 @@ export default function Home() {
                   filteredResults.map((result, index) => (
                     <div
                       key={index}
-                      className={`flex flex-col xs:flex-row items-start xs:items-center gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
+                      className={`flex flex-col gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
                         result.status === "success"
                           ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
                           : result.status === "notfound"
@@ -939,70 +939,152 @@ export default function Home() {
                           : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
                       }`}
                     >
-                      {/* First row for mobile / or first section for desktop */}
-                      <div className="flex items-center gap-2 w-full xs:w-auto">
-                        {getStatusIcon(result.status)}
-                        <span className="font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded-lg text-2xs xs:text-xs shadow-sm border-gray-200 dark:border-gray-700 border truncate max-w-[150px] text-gray-800 dark:text-gray-200">
-                          {result.address.slice(0, 6)}...
-                          {result.address.slice(-6)}
-                        </span>
-                      </div>
-
-                      {/* Second row for mobile / middle section for desktop */}
-                      <div className="flex items-center gap-2 ml-0 xs:ml-auto">
-                        <span
-                          className={`${
-                            result.status === "success"
-                              ? "text-green-600 dark:text-green-400"
-                              : result.status === "notfound"
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-yellow-600 dark:text-yellow-400"
-                          } text-2xs xs:text-xs sm:text-sm font-medium whitespace-nowrap`}
-                        >
-                          {result.message}
-                        </span>
-
-                        {result.premium && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-2xs rounded-full border border-amber-200 dark:border-amber-800/50">
-                            <Icons.Star className="h-2.5 w-2.5" />
-                            Premium
+                      {/* First row with address and status */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(result.status)}
+                          <span className="font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded-lg text-2xs xs:text-xs shadow-sm border-gray-200 dark:border-gray-700 border truncate max-w-[150px] text-gray-800 dark:text-gray-200">
+                            {result.address.slice(0, 6)}...
+                            {result.address.slice(-6)}
                           </span>
-                        )}
-                      </div>
+                        </div>
 
-                      {/* Third row for mobile / right section for desktop */}
-                      <div className="flex items-center gap-2 ml-0 xs:ml-2 mt-1 xs:mt-0 w-full xs:w-auto xs:whitespace-nowrap">
-                        {/* Timestamp */}
-                        <span className="text-2xs text-gray-500 dark:text-gray-400 mr-auto xs:mr-2">
-                          {formatDate(result.timestamp)}
-                        </span>
-
-                        {/* Action buttons */}
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => copyToClipboard(result.address)}
-                            className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            title="Copy address"
-                            aria-label="Copy address to clipboard"
-                          >
-                            {copiedAddress === result.address ? (
-                              <span className="text-2xs text-green-600 dark:text-green-400">
-                                Copied!
-                              </span>
-                            ) : (
-                              <Icons.Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 dark:text-gray-400" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => openExplorer(result.address)}
-                            className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            title="View on explorer"
-                            aria-label="View address on block explorer"
-                          >
-                            <Icons.ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400" />
-                          </button>
+                        <div className="flex items-center gap-2">
+                          {result.premium && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-2xs rounded-full border border-amber-200 dark:border-amber-800/50">
+                              <Icons.Star className="h-2.5 w-2.5" />
+                              Premium
+                            </span>
+                          )}
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => copyToClipboard(result.address)}
+                              className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              title="Copy address"
+                              aria-label="Copy address to clipboard"
+                            >
+                              {copiedAddress === result.address ? (
+                                <span className="text-2xs text-green-600 dark:text-green-400">
+                                  Copied!
+                                </span>
+                              ) : (
+                                <Icons.Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 dark:text-gray-400" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => openExplorer(result.address)}
+                              className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              title="View on explorer"
+                              aria-label="View address on block explorer"
+                            >
+                              <Icons.ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400" />
+                            </button>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Second row with transaction details */}
+                      {result.status === "success" && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm border border-gray-100 dark:border-gray-700">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                              Transactions:
+                            </span>
+                            <div className="flex items-center">
+                              <span
+                                className={`font-mono font-bold text-sm ${
+                                  result.transactions &&
+                                  result.transactions >= 250
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : result.transactions &&
+                                      result.transactions >= 100
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-yellow-600 dark:text-yellow-400"
+                                }`}
+                              >
+                                {result.transactions}
+                              </span>
+                              <span className="ml-1.5 text-green-500 text-2xs">
+                                (≥ 45) ✅
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Transaction progress bar */}
+                          <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                result.transactions &&
+                                result.transactions >= 250
+                                  ? "bg-blue-500 dark:bg-blue-600"
+                                  : result.transactions &&
+                                    result.transactions >= 100
+                                  ? "bg-green-500 dark:bg-green-600"
+                                  : "bg-yellow-500 dark:bg-yellow-600"
+                              }`}
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  (result.transactions || 45) / 2.5
+                                )}%`,
+                              }}
+                            ></div>
+                          </div>
+
+                          {/* Supporter level */}
+                          <div className="flex justify-between items-center mt-1">
+                            <span
+                              className={`text-2xs font-medium px-1.5 py-0.5 rounded-full ${
+                                result.transactions &&
+                                result.transactions >= 250
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                  : result.transactions &&
+                                    result.transactions >= 100
+                                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                  : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                              }`}
+                            >
+                              {result.transactions && result.transactions >= 250
+                                ? "Elite Contributor"
+                                : result.transactions &&
+                                  result.transactions >= 100
+                                ? "Strong Supporter"
+                                : "Basic Eligibility"}
+                            </span>
+                            <span className="text-2xs text-gray-500 dark:text-gray-400">
+                              {formatDate(result.timestamp)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Display message for non-successful results */}
+                      {result.status !== "success" && (
+                        <div className="flex justify-between items-center">
+                          <span
+                            className={`${
+                              result.status === "notfound"
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-yellow-600 dark:text-yellow-400"
+                            } text-2xs xs:text-xs sm:text-sm font-medium`}
+                          >
+                            {result.message}
+                          </span>
+                          <span className="text-2xs text-gray-500 dark:text-gray-400">
+                            {formatDate(result.timestamp)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Premium reason if applicable */}
+                      {result.premium && result.premiumReason && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-1.5 text-2xs text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                          <div className="flex items-center">
+                            <Icons.Award className="h-3 w-3 mr-1 text-amber-500" />
+                            <span>{result.premiumReason}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -1188,18 +1270,118 @@ export default function Home() {
                 {/* Question 1 */}
                 <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
                   <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2">
-                    <span>What is the Soneium OG Badge?</span>
+                    <span>What's the minimum transaction requirement?</span>
                     <span className="transition-transform group-open/item:rotate-180">
                       <Icons.ChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                     </span>
                   </summary>
                   <div className="mt-2 pl-2 text-justify">
-                    <p>
-                      A special recognition for the earliest supporters and
-                      active participants in the Soneium ecosystem. This badge
-                      symbolizes your early involvement in building and
-                      supporting the network's foundation.
+                    <p className="mb-2">
+                      A minimum of{" "}
+                      <span className="font-semibold">45 transactions</span>{" "}
+                      before block #3747022 is required to be eligible for the
+                      OG Badge.
                     </p>
+                    <p className="mb-2">
+                      Any successful token transfer will be counted, including
+                      methods like: execute, withdraw, mint, getReward,
+                      multicall, and similar operations. Failed transactions
+                      will be excluded from this count.
+                    </p>
+                    <p className="mb-2">
+                      You can check your transaction status on the Soneium Block
+                      Explorer.
+                    </p>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-3 mt-2 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <p className="font-medium text-blue-700 dark:text-blue-300">
+                        How to verify your transaction count:
+                      </p>
+                      <div className="mt-2 border-l-4 border-blue-300 dark:border-blue-600 pl-3">
+                        <p className="font-medium text-gray-700 dark:text-gray-300">
+                          In the Soneium Block Explorer, you'll see two
+                          different numbers:
+                        </p>
+                        <div className="mt-1.5 space-y-2">
+                          <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+                            <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">
+                              Transactions:
+                            </span>
+                            <span className="font-mono">45</span>
+                            <span className="ml-auto text-green-500 text-xs">
+                              This is the number that matters! ✓
+                            </span>
+                          </div>
+                          <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+                            <span className="font-mono text-gray-600 dark:text-gray-400">
+                              Transfers:
+                            </span>
+                            <span className="font-mono">92</span>
+                            <span className="ml-auto text-gray-500 text-xs">
+                              (Different metric, not relevant)
+                            </span>
+                          </div>
+                        </div>
+                        <p className="mt-2 font-semibold text-green-600 dark:text-green-400">
+                          If the number after 'Transactions' is 45 or more,
+                          you're eligible! ✅
+                        </p>
+                      </div>
+
+                      <div className="mt-3 bg-indigo-50 dark:bg-indigo-900/20 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-800/40">
+                        <p className="font-medium text-indigo-700 dark:text-indigo-300 flex items-center">
+                          <span className="mr-1">💡</span> Transaction Score
+                          Formula:
+                        </p>
+                        <div className="mt-1.5 pl-2">
+                          <div className="bg-white dark:bg-gray-800 p-2 rounded">
+                            <span className="font-mono text-sm">
+                              <span className="text-indigo-600 dark:text-indigo-400">
+                                if
+                              </span>{" "}
+                              (Tx ≥ 45){" "}
+                              <span className="text-green-600 dark:text-green-400">
+                                → Eligible
+                              </span>
+                            </span>
+                            <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+                              The higher your transaction count, the stronger
+                              your status as an early network supporter! Having
+                              more than the minimum shows greater engagement
+                              with the Soneium ecosystem.
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                            <div className="flex-1 bg-white dark:bg-gray-800 p-2 rounded border-l-4 border-yellow-400 dark:border-yellow-500">
+                              <span className="text-xs font-medium">
+                                Minimum
+                              </span>
+                              <div className="font-mono mt-1">
+                                45 tx = Basic Eligibility
+                              </div>
+                            </div>
+                            <div className="flex-1 bg-white dark:bg-gray-800 p-2 rounded border-l-4 border-green-400 dark:border-green-500">
+                              <span className="text-xs font-medium">
+                                Better
+                              </span>
+                              <div className="font-mono mt-1">
+                                100+ tx = Strong Supporter
+                              </div>
+                            </div>
+                            <div className="flex-1 bg-white dark:bg-gray-800 p-2 rounded border-l-4 border-blue-400 dark:border-blue-500">
+                              <span className="text-xs font-medium">Best</span>
+                              <div className="font-mono mt-1">
+                                250+ tx = Elite Contributor
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="mt-3 text-xs text-blue-600 dark:text-blue-400">
+                        Note: Contract calls are also safe to include since
+                        token transfers typically occur after contract calls.
+                      </p>
+                    </div>
                   </div>
                 </details>
 
