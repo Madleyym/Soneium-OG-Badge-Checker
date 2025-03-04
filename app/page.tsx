@@ -918,8 +918,7 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-
-              {/* Results List - Updated to include detailed transaction information */}
+              {/* Results List with Premium addresses having distinct styling */}
               <div className="space-y-2 max-h-[calc(min(40vh,32rem))] overflow-y-auto pr-1 -mr-1 rounded-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {filteredResults.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
@@ -931,14 +930,25 @@ export default function Home() {
                   filteredResults.map((result, index) => (
                     <div
                       key={index}
-                      className={`flex flex-col gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
+                      className={`relative flex flex-col gap-2 p-2.5 sm:p-3 border rounded-xl hover:shadow-md transition-all ${
                         result.status === "success"
-                          ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                          ? result.premium
+                            ? "bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-800"
+                            : "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
                           : result.status === "notfound"
                           ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                           : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
                       }`}
                     >
+                      {/* Add premium crown badge for premium eligible addresses */}
+                      {result.status === "success" && result.premium && (
+                        <div className="absolute -top-2 -right-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full shadow-lg border-2 border-white dark:border-gray-800">
+                            <Icons.Award className="h-3.5 w-3.5 text-white" />
+                          </span>
+                        </div>
+                      )}
+
                       {/* First row with address and status */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -951,7 +961,7 @@ export default function Home() {
 
                         <div className="flex items-center gap-2">
                           {result.premium && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-2xs rounded-full border border-amber-200 dark:border-amber-800/50">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 text-amber-700 dark:text-amber-300 text-2xs rounded-full border border-amber-200 dark:border-amber-800/50 shadow-sm">
                               <Icons.Star className="h-2.5 w-2.5" />
                               Premium
                             </span>
@@ -991,17 +1001,7 @@ export default function Home() {
                               Transactions:
                             </span>
                             <div className="flex items-center">
-                              <span
-                                className={`font-mono font-bold text-sm ${
-                                  result.transactions &&
-                                  result.transactions >= 250
-                                    ? "text-blue-600 dark:text-blue-400"
-                                    : result.transactions &&
-                                      result.transactions >= 100
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-yellow-600 dark:text-yellow-400"
-                                }`}
-                              >
+                              <span className="font-mono font-bold text-sm text-yellow-600 dark:text-yellow-400">
                                 {result.transactions}
                               </span>
                               <span className="ml-1.5 text-green-500 text-2xs">
@@ -1013,15 +1013,7 @@ export default function Home() {
                           {/* Transaction progress bar */}
                           <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${
-                                result.transactions &&
-                                result.transactions >= 250
-                                  ? "bg-blue-500 dark:bg-blue-600"
-                                  : result.transactions &&
-                                    result.transactions >= 100
-                                  ? "bg-green-500 dark:bg-green-600"
-                                  : "bg-yellow-500 dark:bg-yellow-600"
-                              }`}
+                              className="h-full rounded-full bg-yellow-500 dark:bg-yellow-600"
                               style={{
                                 width: `${Math.min(
                                   100,
@@ -1033,24 +1025,15 @@ export default function Home() {
 
                           {/* Supporter level */}
                           <div className="flex justify-between items-center mt-1">
-                            <span
-                              className={`text-2xs font-medium px-1.5 py-0.5 rounded-full ${
-                                result.transactions &&
-                                result.transactions >= 250
-                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                                  : result.transactions &&
-                                    result.transactions >= 100
-                                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                                  : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                              }`}
-                            >
-                              {result.transactions && result.transactions >= 250
-                                ? "Elite Contributor"
-                                : result.transactions &&
-                                  result.transactions >= 100
-                                ? "Strong Supporter"
-                                : "Basic Eligibility"}
-                            </span>
+                            {result.premium ? (
+                              <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                Premium OG Badge Eligible
+                              </span>
+                            ) : (
+                              <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                                OG Badge Eligible
+                              </span>
+                            )}
                             <span className="text-2xs text-gray-500 dark:text-gray-400">
                               {formatDate(result.timestamp)}
                             </span>
@@ -1089,7 +1072,6 @@ export default function Home() {
                   ))
                 )}
               </div>
-
               {/* Summary Dashboard */}
               <div className="p-4 sm:p-5 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50 shadow-md">
                 <div className="font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200 text-sm sm:text-base flex items-center">
@@ -1365,7 +1347,7 @@ export default function Home() {
                                 Minimum
                               </span>
                               <div className="font-mono mt-1">
-                                45 tx = Basic Eligibility
+                                45 tx = Eligibility
                               </div>
                             </div>
                           </div>
