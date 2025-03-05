@@ -2,6 +2,7 @@
 
 import { AlertCircle } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import BadgeStatus from "./components/BadgeStatus";
 import Image from "next/image";
 import {
   CheckCircle,
@@ -22,6 +23,8 @@ import {
   Award,
   Shield,
   Star,
+  Gift,
+  Check,
 } from "lucide-react";
 import Footer from "./components/Footer";
 
@@ -44,8 +47,34 @@ const Icons = {
   Award,
   Shield,
   Star,
+  Gift,
+  Check,
 };
 
+// API Response interface
+interface ApiResponse {
+  found: boolean;
+  transactions: number;
+  premium: boolean;
+  premiumReason: string;
+  txStats?: {
+    execute: number;
+    withdraw: number;
+    mint: number;
+    getReward: number;
+    multicall: number;
+    other: number;
+    failed: number;
+  };
+  _source: string;
+  bridgeActivity?: any[];
+  badges?: {
+    ogBadge: boolean;
+    premiumBadge: boolean;
+  };
+}
+
+// Result Item interface
 interface ResultItem {
   address: string;
   status: "success" | "error" | "notfound";
@@ -54,6 +83,19 @@ interface ResultItem {
   timestamp?: string;
   premium?: boolean;
   premiumReason?: string;
+  txStats?: {
+    execute?: number;
+    withdraw?: number;
+    mint?: number;
+    getReward?: number;
+    multicall?: number;
+    other?: number;
+    failed?: number;
+  };
+  badges?: {
+    ogBadge: boolean;
+    premiumBadge: boolean;
+  };
 }
 
 export default function BadgeChecker() {
@@ -303,6 +345,7 @@ export default function BadgeChecker() {
         premium: data.premium || false,
         premiumReason: data.premiumReason || "",
         timestamp,
+        badges: data.badges || { ogBadge: false, premiumBadge: false },
       };
     } catch (error: any) {
       // Don't report error if it's an abort error
@@ -467,16 +510,25 @@ export default function BadgeChecker() {
     window.open(`https://soneium.blockscout.com/address/${address}`, "_blank");
   };
 
+  const openBadgeInventory = () => {
+    window.open(
+      `https://soneium.blockscout.com/token/0x2A21B17E366836e5FFB19bd47edB03b4b551C89d?tab=inventory`,
+      "_blank"
+    );
+  };
+
   const downloadResults = () => {
     if (!results.length) return;
 
     const csvContent = [
-      "Address,Status,Transactions,PremiumBadge,PremiumReason,Timestamp",
+      "Address,Status,Transactions,PremiumBadge,PremiumReason,OG_Badge_Received,Premium_Badge_Received,Timestamp",
       ...results.map(
         (r) =>
           `${r.address},${r.status},${r.transactions || 0},${
             r.premium || false
-          },${r.premiumReason || ""},${r.timestamp || ""}`
+          },${r.premiumReason || ""},${r.badges?.ogBadge || false},${
+            r.badges?.premiumBadge || false
+          },${r.timestamp || ""}`
       ),
     ].join("\n");
 
@@ -505,7 +557,7 @@ export default function BadgeChecker() {
     }).format(date);
   };
 
-  // Memoized calculations for summary
+  // Revised summary statistics calculation
   const summaryStats = useMemo(() => {
     if (!results.length)
       return {
@@ -517,22 +569,46 @@ export default function BadgeChecker() {
         notEligiblePercent: 0,
         errorsPercent: 0,
         premiumPercent: 0,
+        hasOgBadge: 0,
+        hasPremiumBadge: 0,
+        ogBadgePercent: 0,
+        premiumBadgePercent: 0,
       };
 
     const eligible = results.filter((r) => r.status === "success").length;
     const notEligible = results.filter((r) => r.status === "notfound").length;
     const errors = results.filter((r) => r.status === "error").length;
-    const premium = results.filter((r) => r.premium).length;
+
+    // Count all premium eligible addresses (either marked premium OR actually have a premium badge)
+    const premium = results.filter(
+      (r) => (r.premium || r.badges?.premiumBadge) && r.status === "success"
+    ).length;
+
+    // Count badge holders - consistent calculation
+    const hasOgBadge = results.filter(
+      (r) => r.badges?.ogBadge && r.status === "success"
+    ).length;
+
+    const hasPremiumBadge = results.filter(
+      (r) => r.badges?.premiumBadge && r.status === "success"
+    ).length;
 
     return {
       eligible,
       notEligible,
       errors,
       premium,
-      eligiblePercent: Math.round((eligible / results.length) * 100),
-      notEligiblePercent: Math.round((notEligible / results.length) * 100),
-      errorsPercent: Math.round((errors / results.length) * 100),
-      premiumPercent: eligible > 0 ? Math.round((premium / eligible) * 100) : 0,
+      hasOgBadge,
+      hasPremiumBadge,
+      eligiblePercent: Math.round((eligible / results.length) * 100) || 0,
+      notEligiblePercent: Math.round((notEligible / results.length) * 100) || 0,
+      errorsPercent: Math.round((errors / results.length) * 100) || 0,
+      premiumPercent:
+        eligible > 0 ? Math.round((premium / eligible) * 100) || 0 : 0,
+      ogBadgePercent:
+        eligible > 0 ? Math.round((hasOgBadge / eligible) * 100) || 0 : 0,
+      premiumBadgePercent:
+        premium > 0 ? Math.round((hasPremiumBadge / premium) * 100) || 0 : 0,
     };
   }, [results]);
 
@@ -600,20 +676,36 @@ export default function BadgeChecker() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center mt-2 space-x-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Snapshot taken at block{" "}
-                  <span className="font-mono bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded text-blue-800 dark:text-blue-300">
-                    #3747022
-                  </span>
-                </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center mt-2 space-y-2 sm:space-y-0 sm:space-x-3">
+                <div className="flex items-center space-x-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Snapshot taken at block{" "}
+                    <span className="font-mono bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded text-blue-800 dark:text-blue-300">
+                      #3747022
+                    </span>
+                  </p>
+                  <button
+                    onClick={() => setShowInfo(!showInfo)}
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    aria-label="Show information"
+                  >
+                    <Icons.Info className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                 <button
-                  onClick={() => setShowInfo(!showInfo)}
-                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  aria-label="Show information"
+                  onClick={openBadgeInventory}
+                  className="flex items-center space-x-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                 >
-                  <Icons.Info className="h-3.5 w-3.5" />
+                  <Icons.ExternalLink className="h-3 w-3 mr-1" />
+                  <span>View Badge Inventory</span>
                 </button>
+              </div>
+
+              <div className="mt-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-2 text-xs text-green-800 dark:text-green-300 flex items-center">
+                <Icons.Gift className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>
+                  Distribution complete! Check if you've received your badges
+                </span>
               </div>
             </div>
           </div>
@@ -623,7 +715,8 @@ export default function BadgeChecker() {
               <div className="flex items-center">
                 <Icons.Info className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span>
-                  Tip: Enter multiple addresses (one per line) to check in batch
+                  This tool now shows if badges have been received in addition
+                  to checking eligibility
                 </span>
               </div>
               <button
@@ -718,15 +811,14 @@ export default function BadgeChecker() {
               <div className="mt-3 flex items-center">
                 <Icons.Clock className="h-4 w-4 mr-1.5" />
                 <span className="text-xs font-semibold">
-                  Last updated: March 02, 2025
+                  Last updated: March 04, 2025
                 </span>
               </div>
-              <div className="mt-2 px-2 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30 text-amber-800 dark:text-amber-300 text-xs">
+              <div className="mt-2 px-2 py-1 bg-green-100 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30 text-green-800 dark:text-green-300 text-xs">
                 <div className="flex items-center">
-                  <Icons.Info className="h-3.5 w-3.5 mr-1" />
+                  <Icons.Check className="h-3.5 w-3.5 mr-1" />
                   <span>
-                    Both badges will be released in the first week of March 2025
-                    (Still under consideration, information not yet official)
+                    Both badges have been fully distributed as of March 2, 2025
                   </span>
                 </div>
               </div>
@@ -847,7 +939,7 @@ export default function BadgeChecker() {
                     </span>
                   </>
                 ) : (
-                  <span>Check Eligibility</span>
+                  <span>Check Eligibility & Badges</span>
                 )}
               </button>
 
@@ -914,7 +1006,7 @@ export default function BadgeChecker() {
                   </span>
                 </div>
               </div>
-              {/* Results List with Premium addresses having distinct styling */}
+              {/* Results List with Premium addresses having distinct styling and badge indications */}
               <div className="space-y-2 max-h-[calc(min(40vh,32rem))] overflow-y-auto pr-1 -mr-1 rounded-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {filteredResults.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
@@ -936,7 +1028,7 @@ export default function BadgeChecker() {
                           : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
                       }`}
                     >
-                      {/* Add premium crown badge for premium eligible addresses */}
+                      {/* Add premium badge indicator */}
                       {result.status === "success" && result.premium && (
                         <div className="absolute -top-2 -right-2">
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full shadow-lg border-2 border-white dark:border-gray-800">
@@ -992,6 +1084,7 @@ export default function BadgeChecker() {
                       {/* Second row with transaction details */}
                       {result.status === "success" && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm border border-gray-100 dark:border-gray-700">
+                          {/* Transaction information */}
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
                               Transactions:
@@ -1019,11 +1112,73 @@ export default function BadgeChecker() {
                             ></div>
                           </div>
 
+                          {/* Badge Status Section */}
+                          <div className="mt-2 bg-blue-50 dark:bg-blue-900/30 rounded-md p-2 text-2xs">
+                            <BadgeStatus result={result} Icons={Icons} />
+                          </div>
+
+                          {/* Transaction types detailed breakdown */}
+                          <div className="mt-2 bg-gray-50 dark:bg-gray-900/30 rounded-md p-2 text-2xs">
+                            <div className="flex justify-between mb-1">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                Transaction Types:
+                              </span>
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {result.transactions} Total
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-gray-600 dark:text-gray-400">
+                              <div className="flex justify-between">
+                                <span>Execute:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.execute || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Withdraw:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.withdraw || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Mint:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.mint || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>GetReward:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.getReward || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Multicall:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.multicall || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Other:</span>
+                                <span className="font-mono">
+                                  {result.txStats?.other || "-"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between col-span-2 mt-1 pt-1 border-t border-gray-200 dark:border-gray-700 text-red-500 dark:text-red-400">
+                                <span>Failed (not counted):</span>
+                                <span className="font-mono">
+                                  {result.txStats?.failed || "0"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
                           {/* Supporter level */}
                           <div className="flex justify-between items-center mt-1">
                             {result.premium ? (
                               <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                                Premium OG Badge Eligible
+                                Premium Badge Eligible
                               </span>
                             ) : (
                               <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
@@ -1130,6 +1285,94 @@ export default function BadgeChecker() {
                   </div>
                 </div>
 
+                {/* Badge Distribution Statistics - New Addition */}
+                <div className="mt-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-gray-700">
+                  <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                    Badge Distribution Status
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* OG Badge Distribution */}
+                    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-2 border border-blue-100 dark:border-blue-800/50">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center">
+                          <Icons.Shield className="h-3.5 w-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                            OG Badge Recipients
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                          {summaryStats.hasOgBadge} / {summaryStats.eligible}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-blue-100 dark:bg-blue-800/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500"
+                          style={{ width: `${summaryStats.ogBadgePercent}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-end mt-1">
+                        <span className="text-2xs text-blue-600 dark:text-blue-400">
+                          {summaryStats.ogBadgePercent}% received
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Premium Badge Distribution */}
+                    <div className="bg-amber-50 dark:bg-amber-900/30 rounded-lg p-2 border border-amber-100 dark:border-amber-800/50">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center">
+                          <Icons.Award className="h-3.5 w-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
+                          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                            Premium Badge Recipients
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                          {summaryStats.hasPremiumBadge} /{" "}
+                          {summaryStats.premium > 0
+                            ? summaryStats.premium
+                            : "0"}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-amber-100 dark:bg-amber-800/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500 dark:bg-amber-500 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${
+                              summaryStats.premium > 0
+                                ? summaryStats.premiumBadgePercent
+                                : 0
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-end mt-1">
+                        <span className="text-2xs text-amber-600 dark:text-amber-400">
+                          {summaryStats.premium > 0
+                            ? summaryStats.premiumBadgePercent
+                            : 0}
+                          % received
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Update this section in Badge Distribution Status */}
+                  <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                    <p className="flex items-center">
+                      <Icons.Clock className="h-3 w-3 mr-1" />
+                      Last updated:{" "}
+                      {new Date("2025-03-04T23:26:36Z").toLocaleDateString()}
+                    </p>
+                    <button
+                      onClick={openBadgeInventory}
+                      className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                    >
+                      <Icons.ExternalLink className="h-3 w-3 mr-1" />
+                      View on Blockscout
+                    </button>
+                  </div>
+                </div>
+
                 {/* Visual Representation - Fixed height to prevent layout shifts */}
                 <div className="mt-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-gray-700">
                   <div className="relative pt-1">
@@ -1201,33 +1444,37 @@ export default function BadgeChecker() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex h-4 mb-2 overflow-hidden text-xs rounded-full">
-                        <div
-                          style={{
-                            width: `${summaryStats.premiumPercent}%`,
-                          }}
-                          className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-500 dark:bg-amber-600 transition-all duration-500"
-                        ></div>
-                        <div
-                          style={{
-                            width: `${
-                              100 - (summaryStats.premiumPercent || 0)
-                            }%`,
-                          }}
-                          className="flex flex-col text-center whitespace-nowrap text-gray-600 justify-center bg-gray-200 dark:bg-gray-600 transition-all duration-500"
-                        ></div>
-                      </div>
+                    </div>
+                    <div className="flex h-4 mb-2 overflow-hidden text-xs rounded-full">
+                      <div
+                        style={{
+                          width: `${summaryStats.premiumPercent || 0}%`,
+                        }}
+                        className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-500 dark:bg-amber-600 transition-all duration-500"
+                      ></div>
+                      <div
+                        style={{
+                          width: `${100 - (summaryStats.premiumPercent || 0)}%`,
+                        }}
+                        className="flex flex-col text-center whitespace-nowrap text-gray-600 justify-center bg-gray-200 dark:bg-gray-600 transition-all duration-500"
+                      ></div>
+                    </div>
 
-                      {/* Legend */}
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-2">
-                        <div className="flex items-center">
-                          <div className="h-3 w-3 bg-amber-500 dark:bg-amber-600 rounded mr-1"></div>
-                          <span>Premium OG Badge</span>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
-                          <span>Regular OG Badge</span>
-                        </div>
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-2">
+                      <div className="flex items-center">
+                        <div className="h-3 w-3 bg-amber-500 dark:bg-amber-600 rounded mr-1"></div>
+                        <span>
+                          Premium OG Badge (
+                          {summaryStats.premium > 0
+                            ? summaryStats.hasPremiumBadge
+                            : 0}{" "}
+                          received)
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
+                        <span>Regular OG Badge</span>
                       </div>
                     </div>
                   </div>
