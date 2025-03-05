@@ -428,7 +428,7 @@ const FAQ: React.FC = () => {
                       <li>Go to your wallet's NFT section</li>
                       <li>Select "Import NFT" or similar option</li>
                       <li>Enter the contract address above</li>
-                      <li>Enter Token ID (1 for Premium, 2 for OG)</li>
+                      <li>Enter Token ID (1 for Premium, 0 for OG)</li>
                       <li>Confirm import</li>
                     </ol>
                   </div>
