@@ -3,7 +3,7 @@
 <div align="center">
   <img src="app/assets/dekstop.png" alt="Desktop View" style="max-width: 80%; margin-bottom: 20px;">
   <br><br> 
-  <img src="app/assets/mobile.png" alt="Mobile View" style="max-width: 8%; margin-top: 60px;">
+  <img src="app/assets/mobile.jpg" alt="Mobile View" style="max-width: 8%; margin-top: 60px;">
 </div>
 
 <br><br> 
@@ -17,6 +17,7 @@ A web-based tool to check if your wallet address is eligible for the Soneium OG 
 ## ✨ Features
 
 - **OG & Premium Badge Verification**: Check eligibility for both standard OG Badge and Premium OG Badge
+- **Badge Contract Information**: Access details to import your badges into any compatible wallet
 - **Batch Checking**: Verify multiple wallet addresses simultaneously (one per line)
 - **Real-time Validation**: Instant feedback on wallet eligibility with transaction counts
 - **Premium Badge Detection**: Identifies wallets eligible for the enhanced Premium OG Badge
@@ -26,7 +27,7 @@ A web-based tool to check if your wallet address is eligible for the Soneium OG 
 - **Mobile Responsive**: Optimized for all device sizes with adaptive UI
 - **Search & Filter**: Easily search through checked addresses by status or details
 - **History Tracking**: Quick access to previously checked addresses with localStorage persistence
-- **Detailed FAQ Section**: Expandable questions and answers with comprehensive information
+- **Enhanced FAQ Section**: Comprehensive information with badge contract details for wallet import
 
 ## 🏆 Badge Eligibility Criteria
 
@@ -40,6 +41,16 @@ Requires meeting any one of these criteria:
 - Bridged 1 ETH via the native bridge
 - Bridged ~70K ASTR (≈1 ETH) via Astar Network CCIP 
 - Bridged $2.5K USDC via the native bridge
+
+## 💎 Badge Contract Information
+
+The badges have been distributed as Soulbound tokens (non-transferable):
+
+- **Contract Address**: `0xEE70e6d461F0888Fd9DB60cb5B2e933adF5f4c7C`
+- **OG Badge**: Token ID `2`
+- **Premium OG Badge**: Token ID `1`
+
+Users can import these tokens to any compatible wallet using these details.
 
 ## 📋 Usage Instructions
 
@@ -58,13 +69,14 @@ The application is fully responsive and works on mobile devices. However, the di
 
 ## 🗓️ Distribution Timeline
 
-Both the OG Badge and Premium OG Badge are scheduled to be distributed in the first week of March 2025 as Soulbound tokens (non-transferable).
+Both OG Badge and Premium OG Badge distribution is now complete as of March 2, 2025. All eligible wallets should have received their Soulbound tokens.
 
 ## 🔍 Technical Details
 
 - **Snapshot Block**: #3747022
 - **Block Hash**: 0x9c1a6ef0f3d4cf2ff5844ae0727cdc1c2888650bd6f62bd97e9f8ffa6b8ae430
 - **Eligible Wallets**: 426,994 addresses qualify for the OG Badge
+- **Last Updated**: March 5, 2025
 
 ## 🛠️ Technologies
 
@@ -75,6 +87,13 @@ Both the OG Badge and Premium OG Badge are scheduled to be distributed in the fi
 - Local Storage for preferences and history
 - CSV export functionality
 - Vercel (Hosting)
+
+## 🧩 Code Architecture
+
+- **Component Separation**: Footer and FAQ components separated for better code organization and maintainability
+- **Responsive Design**: Adaptive UI components for all screen sizes
+- **Dark/Light Mode**: Theme toggle with system preference detection
+- **Modular Structure**: Reusable components for consistent UI elements
 
 ## 🚀 Local Development
 
