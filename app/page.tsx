@@ -1170,7 +1170,7 @@ export default function BadgeChecker() {
                             </div>
                           </div>
 
-                          {/* Supporter level */}
+                          {/* Supporter level
                           <div className="flex justify-between items-center mt-1">
                             {result.premium ? (
                               <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
@@ -1184,7 +1184,7 @@ export default function BadgeChecker() {
                             <span className="text-2xs text-gray-500 dark:text-gray-400">
                               {formatDate(result.timestamp)}
                             </span>
-                          </div>
+                          </div> */}
                         </div>
                       )}
 
