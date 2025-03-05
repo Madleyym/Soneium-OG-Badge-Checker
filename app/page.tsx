@@ -61,9 +61,9 @@ interface ApiResponse {
     execute: number;
     withdraw: number;
     mint: number;
-    getReward: number;
+    // getReward: number;
     multicall: number;
-    other: number;
+    // other: number;
     failed: number;
   };
   _source: string;
@@ -87,9 +87,9 @@ interface ResultItem {
     execute?: number;
     withdraw?: number;
     mint?: number;
-    getReward?: number;
+    // getReward?: number;
     multicall?: number;
-    other?: number;
+    // other?: number;
     failed?: number;
   };
   badges?: {
@@ -367,6 +367,7 @@ export default function BadgeChecker() {
 
       console.error("Error checking address:", error);
 
+      // More descriptive error message
       const errorMessage = error.message?.includes("503")
         ? "This address likely has no transactions (API issue)"
         : error.message || "Error checking address";
@@ -914,7 +915,7 @@ export default function BadgeChecker() {
                 ref={addressInputRef}
                 value={addresses}
                 onChange={(e) => setAddresses(e.target.value)}
-                placeholder="wallet addresses (one per line)&#10;Example: 0x"
+                placeholder="wallet addresses (one per line)&#10;Example: 0x0..00"
                 className="w-full h-24 sm:h-36 p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 outline-none resize-none font-mono text-xs sm:text-sm shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 disabled={isChecking}
                 style={{ fontSize: isMobile ? "12px" : "" }}
@@ -1133,62 +1134,58 @@ export default function BadgeChecker() {
                             <BadgeStatus result={result} Icons={Icons} />
                           </div>
 
-                          {/* Transaction types detailed breakdown */}
-                          <div className="mt-2 bg-gray-50 dark:bg-gray-900/30 rounded-md p-2 text-2xs">
-                            <div className="flex justify-between mb-1">
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
-                                Transaction Types:
-                              </span>
-                              <span className="text-blue-600 dark:text-blue-400">
-                                {result.transactions} Total
-                              </span>
-                            </div>
+                          {/* Transaction types - shown if txStats exists */}
+                          {result.txStats && (
+                            <div className="mt-2 bg-gray-50 dark:bg-gray-900/30 rounded-md p-2 text-2xs">
+                              <div className="flex justify-between mb-1">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">
+                                  Transaction Types:
+                                </span>
+                                <span className="text-blue-600 dark:text-blue-400">
+                                  {result.transactions} Total
+                                </span>
+                              </div>
 
-                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-gray-600 dark:text-gray-400">
-                              <div className="flex justify-between">
-                                <span>Execute:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.execute || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Withdraw:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.withdraw || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Mint:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.mint || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>GetReward:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.getReward || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Multicall:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.multicall || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Other:</span>
-                                <span className="font-mono">
-                                  {result.txStats?.other || "-"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between col-span-2 mt-1 pt-1 border-t border-gray-200 dark:border-gray-700 text-red-500 dark:text-red-400">
-                                <span>Failed (not counted):</span>
-                                <span className="font-mono">
-                                  {result.txStats?.failed || "0"}
-                                </span>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-gray-600 dark:text-gray-400">
+                                {/* Tambahkan pemeriksaan undefined */}
+                                {typeof result.txStats.execute !==
+                                  "undefined" && (
+                                  <div className="flex justify-between">
+                                    <span>Execute:</span>
+                                    <span className="font-mono">
+                                      {result.txStats.execute}
+                                    </span>
+                                  </div>
+                                )}
+                                {typeof result.txStats.withdraw !==
+                                  "undefined" && (
+                                  <div className="flex justify-between">
+                                    <span>Withdraw:</span>
+                                    <span className="font-mono">
+                                      {result.txStats.withdraw}
+                                    </span>
+                                  </div>
+                                )}
+                                {typeof result.txStats.mint !== "undefined" && (
+                                  <div className="flex justify-between">
+                                    <span>Mint:</span>
+                                    <span className="font-mono">
+                                      {result.txStats.mint}
+                                    </span>
+                                  </div>
+                                )}
+                                {typeof result.txStats.failed !== "undefined" &&
+                                  result.txStats.failed > 0 && (
+                                    <div className="flex justify-between col-span-2 mt-1 pt-1 border-t border-gray-200 dark:border-gray-700 text-red-500 dark:text-red-400">
+                                      <span>Failed (not counted):</span>
+                                      <span className="font-mono">
+                                        {result.txStats.failed}
+                                      </span>
+                                    </div>
+                                  )}
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       )}
 
