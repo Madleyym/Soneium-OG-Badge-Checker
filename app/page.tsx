@@ -26,8 +26,8 @@ import {
   Gift,
   Check,
 } from "lucide-react";
-import Footer from "./components/Footer";
-
+import Footer from "./components/sections/UI/Footer";
+import FAQ from "./components/sections/FAQ";
 const Icons = {
   CheckCircle,
   XCircle,
@@ -701,11 +701,9 @@ export default function BadgeChecker() {
                 </button>
               </div>
 
-              <div className="mt-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-2 text-xs text-green-800 dark:text-green-300 flex items-center">
+              <div className="mt-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-2 text-xs text-green-800 dark:text-green-300 flex items-center justify-center text-center">
                 <Icons.Gift className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>
-                  Distribution complete! Check if you've received your badges
-                </span>
+                <span>Distribution complete! Check your badges ASAP!</span>
               </div>
             </div>
           </div>
@@ -953,7 +951,6 @@ export default function BadgeChecker() {
               )}
             </div>
           </div>
-
           {/* Progress Bar (visible when checking) - Fixed height to prevent layout shifts */}
           {isChecking && (
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
@@ -963,7 +960,6 @@ export default function BadgeChecker() {
               ></div>
             </div>
           )}
-
           {/* Results Section */}
           {results.length > 0 && (
             <div
@@ -1482,9 +1478,9 @@ export default function BadgeChecker() {
               </div>
             </div>
           )}
-
           {/* Add Footer component here, before the closing div */}
-          <Footer />
+          <FAQ />
+          <Footer />{" "}
         </div>
       </main>
     </>
