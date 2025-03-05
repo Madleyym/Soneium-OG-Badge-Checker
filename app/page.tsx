@@ -1320,7 +1320,7 @@ export default function BadgeChecker() {
                         <div className="flex items-center">
                           <Icons.Award className="h-3.5 w-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
                           <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                            Premium Badge Recipients
+                            Premium OG Badge Recipients
                           </span>
                         </div>
                         <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -1430,7 +1430,7 @@ export default function BadgeChecker() {
                       <div className="flex mb-2 items-center justify-between">
                         <div>
                           <span className="text-xs font-semibold inline-block text-amber-600 dark:text-amber-400">
-                            Premium Badge
+                            Premium OG Badge
                           </span>
                         </div>
                         <div className="text-right">
