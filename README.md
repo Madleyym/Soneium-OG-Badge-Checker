@@ -47,7 +47,7 @@ Requires meeting any one of these criteria:
 The badges have been distributed as Soulbound tokens (non-transferable):
 
 - **Contract Address**: `0xEE70e6d461F0888Fd9DB60cb5B2e933adF5f4c7C`
-- **OG Badge**: Token ID `2`
+- **OG Badge**: Token ID `0`
 - **Premium OG Badge**: Token ID `1`
 
 Users can import these tokens to any compatible wallet using these details.
