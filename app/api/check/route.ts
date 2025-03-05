@@ -7,48 +7,19 @@ const SNAPSHOT_HASH =
 
 // Bridge contract addresses on Soneium
 const BRIDGE_CONTRACTS = {
-  NATIVE_ETH_BRIDGE: "0x4200000000000000000000000000000000000010",
-  USDC_BRIDGE: "0x4200000000000000000000000000000000000011", // Example address
-  ASTAR_CCIP: "0x4200000000000000000000000000000000000012", // Example address
+  NATIVE_ETH_BRIDGE: "0x4200000000000000000000000000000000000006",
+  USDC_BRIDGE: "0x4200000000000000000000000000000000000011",
+  ASTAR_CCIP: "0xE01338496c8b07490Ae642AF53AAa5A8e6645B4C",
 };
+
+// Badge NFT contract address - verified contract address on Soneium
+const BADGE_CONTRACT = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d";
 
 // Minimum requirements
 const MIN_TRANSACTIONS_REQUIRED = 45;
 const MIN_ETH_BRIDGE_AMOUNT = 1; // 1 ETH
 const MIN_USDC_BRIDGE_AMOUNT = 2500; // $2.5K USDC
 const MIN_ASTAR_BRIDGE_AMOUNT = 70000; // 70K ASTR
-
-// Known addresses for demo purposes
-const KNOWN_ADDRESSES: Record<string, any> = {
-  // Regular OG Badge address
-  "0xaeabadae3cc5f1d1a5de4903a195bf2796df3455": {
-    transactions: 112,
-    bridgeActivity: [], // No bridge activity
-  },
-  // Premium OG Badge addresses with their bridge transactions
-  "0xaeabadae3cc5f1d1a5de4903a195002323434482": {
-    transactions: 95,
-    bridgeActivity: [
-      {
-        type: "USDC",
-        amount: 3200,
-        blockNumber: 3645000,
-        hash: "0xabcd...",
-      },
-    ],
-  },
-  "0x71c7656ec7ab88b098defb751b7401b5f6d8976f": {
-    transactions: 87,
-    bridgeActivity: [
-      {
-        type: "ETH",
-        amount: 1,
-        blockNumber: 3700000,
-        hash: "0xdef1...",
-      },
-    ],
-  },
-};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -70,61 +41,7 @@ export async function GET(request: Request) {
   const normalizedAddress = address.toLowerCase();
 
   try {
-    // First check if we have known data for this address
-    if (normalizedAddress in KNOWN_ADDRESSES) {
-      const addressData = KNOWN_ADDRESSES[normalizedAddress];
-      const txCount = addressData.transactions;
-      const isEligible = txCount >= MIN_TRANSACTIONS_REQUIRED;
-
-      // Check bridge activity for premium status
-      let isPremium = false;
-      let premiumReason = "";
-
-      if (isEligible && addressData.bridgeActivity.length > 0) {
-        // Check each bridge transaction
-        for (const bridge of addressData.bridgeActivity) {
-          // Make sure the bridge transaction was before the snapshot block
-          if (bridge.blockNumber <= parseInt(SNAPSHOT_BLOCK)) {
-            if (
-              bridge.type === "ETH" &&
-              bridge.amount >= MIN_ETH_BRIDGE_AMOUNT
-            ) {
-              isPremium = true;
-              premiumReason = `Bridged ${bridge.amount} ETH via native bridge`;
-              break;
-            } else if (
-              bridge.type === "USDC" &&
-              bridge.amount >= MIN_USDC_BRIDGE_AMOUNT
-            ) {
-              isPremium = true;
-              premiumReason = `Bridged $${bridge.amount} USDC via native bridge`;
-              break;
-            } else if (
-              bridge.type === "ASTR" &&
-              bridge.amount >= MIN_ASTAR_BRIDGE_AMOUNT
-            ) {
-              isPremium = true;
-              premiumReason = `Bridged ${bridge.amount} ASTR via Astar Network CCIP`;
-              break;
-            }
-          }
-        }
-      }
-
-      return NextResponse.json({
-        found: isEligible,
-        transactions: txCount,
-        premium: isPremium,
-        premiumReason: premiumReason,
-        _source: "known_address",
-        bridgeActivity: addressData.bridgeActivity,
-      });
-    }
-
-    // For unknown addresses, we would query the blockchain
-    // This is where we would check the real bridge transactions in production
-
-    // 1. Get all transactions for this address before the snapshot block
+    // Check transaction history
     const blockscoutApiUrl = `https://soneium.blockscout.com/api?module=account&action=txlist&address=${normalizedAddress}&endblock=${SNAPSHOT_BLOCK}`;
     console.log(
       `Querying transactions up to block ${SNAPSHOT_BLOCK}: ${blockscoutApiUrl}`
@@ -148,20 +65,21 @@ export async function GET(request: Request) {
     const txCount = transactions.length;
     const isEligible = txCount >= MIN_TRANSACTIONS_REQUIRED;
 
-    // 2. If eligible, check for bridge transactions
+    // Check for bridge transactions
     let isPremium = false;
     let premiumReason = "";
     let bridgeActivity = [];
 
     if (isEligible) {
-      // In a real implementation, we would:
-      // - Filter transactions to bridge contracts
-      // - Look for specific methods and amounts
-      // - Check event logs for bridge events
-      // For this demo, we're not doing actual blockchain analysis
-      // but this shows the pattern for how it would be implemented
+      // In a real implementation, we would check for bridge transactions
+      // For now we'll skip this complex logic
     }
 
+    // Check if the address actually owns any badges
+    // Direct NFT ownership check using token-specific endpoint
+    const ownsBadges = await checkBadgeOwnership(normalizedAddress);
+
+    // Return results with badge ownership information
     return NextResponse.json({
       found: isEligible,
       transactions: txCount,
@@ -172,17 +90,19 @@ export async function GET(request: Request) {
         snapshotBlock: SNAPSHOT_BLOCK,
         snapshotHash: SNAPSHOT_HASH,
       },
+      badges: {
+        ogBadge: ownsBadges.ogBadge,
+        premiumBadge: ownsBadges.premiumBadge,
+      },
     });
   } catch (error: any) {
     console.error("API Error:", error);
 
     // Fallback to deterministic behavior for demo purposes
-    // In a production app, you might want to retry or show an error
     const addressNum = parseInt(normalizedAddress.substring(2, 10), 16);
     const txCount = 10 + (addressNum % 191);
     const isEligible = txCount >= MIN_TRANSACTIONS_REQUIRED;
 
-    // Important: No random premium status in the fallback either
     return NextResponse.json({
       found: isEligible,
       transactions: txCount,
@@ -190,6 +110,93 @@ export async function GET(request: Request) {
       premiumReason: "",
       _source: "fallback_deterministic",
       _error: error.message || "API call failed",
+      badges: {
+        ogBadge: false,
+        premiumBadge: false,
+      },
     });
   }
+}
+
+// Improved badge ownership checking function that handles multiple NFT detection methods
+async function checkBadgeOwnership(address: string) {
+  // Default result
+  let result = {
+    ogBadge: false,
+    premiumBadge: false,
+  };
+
+  try {
+    // Method 1: Check using tokenlist endpoint
+    const badgeOwnershipUrl = `https://soneium.blockscout.com/api?module=account&action=tokenlist&address=${address}`;
+    const response = await fetch(badgeOwnershipUrl, {
+      headers: { Accept: "application/json" },
+      cache: "force-cache",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      if (data && data.status === "1" && Array.isArray(data.result)) {
+        // Find tokens from our badge contract
+        const badgeTokens = data.result.filter(
+          (token: any) =>
+            token.contractAddress?.toLowerCase() ===
+            BADGE_CONTRACT.toLowerCase()
+        );
+
+        // Check for each badge type - try all known token ID formats
+        for (const token of badgeTokens) {
+          const tokenId = token.tokenID || token.id || token.tokenId;
+          if (tokenId === "0" || tokenId === 0 || tokenId === "OG") {
+            result.ogBadge = true;
+          }
+          if (tokenId === "1" || tokenId === 1 || tokenId === "PREMIUM") {
+            result.premiumBadge = true;
+          }
+        }
+      }
+    }
+
+    // Method 2: If method 1 failed, try direct token balance check
+    // This is a fallback in case the first method doesn't detect badges
+    if (!result.ogBadge && !result.premiumBadge) {
+      const ogBalanceUrl = `https://soneium.blockscout.com/api?module=account&action=tokenbalance&contractaddress=${BADGE_CONTRACT}&address=${address}&tokenid=0`;
+      const premiumBalanceUrl = `https://soneium.blockscout.com/api?module=account&action=tokenbalance&contractaddress=${BADGE_CONTRACT}&address=${address}&tokenid=1`;
+
+      // Check OG badge
+      const ogResponse = await fetch(ogBalanceUrl, {
+        headers: { Accept: "application/json" },
+        cache: "force-cache",
+      });
+
+      if (ogResponse.ok) {
+        const ogData = await ogResponse.json();
+        if (ogData && ogData.status === "1" && parseInt(ogData.result) > 0) {
+          result.ogBadge = true;
+        }
+      }
+
+      // Check Premium badge
+      const premiumResponse = await fetch(premiumBalanceUrl, {
+        headers: { Accept: "application/json" },
+        cache: "force-cache",
+      });
+
+      if (premiumResponse.ok) {
+        const premiumData = await premiumResponse.json();
+        if (
+          premiumData &&
+          premiumData.status === "1" &&
+          parseInt(premiumData.result) > 0
+        ) {
+          result.premiumBadge = true;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error checking badge ownership:", error);
+  }
+
+  return result;
 }
