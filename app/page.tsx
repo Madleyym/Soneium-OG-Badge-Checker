@@ -1375,7 +1375,7 @@ export default function BadgeChecker() {
                     <div className="flex mb-2 items-center justify-between">
                       <div>
                         <span className="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
-                          Distribution
+                          OG Badge
                         </span>
                       </div>
                       <div className="text-right">
@@ -1430,7 +1430,7 @@ export default function BadgeChecker() {
                       <div className="flex mb-2 items-center justify-between">
                         <div>
                           <span className="text-xs font-semibold inline-block text-amber-600 dark:text-amber-400">
-                            Premium OG Badge
+                            Premium Badge
                           </span>
                         </div>
                         <div className="text-right">
@@ -1469,8 +1469,8 @@ export default function BadgeChecker() {
                         </span>
                       </div>
                       <div className="flex items-center">
-                        <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
-                        <span>Regular OG Badge</span>
+                        {/* <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
+                        <span>Regular OG Badge</span> */}
                       </div>
                     </div>
                   </div>
