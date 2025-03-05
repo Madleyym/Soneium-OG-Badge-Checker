@@ -331,6 +331,17 @@ export default function BadgeChecker() {
         if (response.status === 429) {
           throw new Error("Rate limit exceeded. Please try again later.");
         }
+        if (response.status === 503) {
+          // Special handling for 503 Service Unavailable - show as error, not notfound
+          return {
+            address,
+            status: "error", // Using error status instead of notfound
+            message: "This address likely has no transactions (API issue)",
+            transactions: 0,
+            timestamp: new Date().toISOString(),
+            badges: { ogBadge: false, premiumBadge: false },
+          };
+        }
         throw new Error(`API error: ${response.status}`);
       }
 
@@ -340,7 +351,9 @@ export default function BadgeChecker() {
       return {
         address,
         status: data.found ? "success" : "notfound",
-        message: data.found ? `Found (${data.transactions} tx)` : "Not found",
+        message: data.found
+          ? `Found (${data.transactions} tx)`
+          : "Not eligible - insufficient transactions",
         transactions: data.transactions || 0,
         premium: data.premium || false,
         premiumReason: data.premiumReason || "",
@@ -348,29 +361,30 @@ export default function BadgeChecker() {
         badges: data.badges || { ogBadge: false, premiumBadge: false },
       };
     } catch (error: any) {
-      // Don't report error if it's an abort error
       if (error.name === "AbortError") {
         throw error; // Re-throw to handle in the caller
       }
 
       console.error("Error checking address:", error);
+
+      const errorMessage = error.message?.includes("503")
+        ? "This address likely has no transactions (API issue)"
+        : error.message || "Error checking address";
+
       return {
         address,
-        status: "error",
-        message: error.message || "Error checking address",
+        status: "error", // Ensure we use error status
+        message: errorMessage,
         timestamp: new Date().toISOString(),
       };
     }
   };
 
-  // Update history when checking addresses
   const updateHistory = useCallback((addressList: string[]) => {
-    // Only add valid addresses to history
     const validAddresses = addressList.filter(isValidAddress);
 
     if (validAddresses.length === 0) return;
 
-    // Add to history, remove duplicates, and limit to 20 items
     setHistory((prevHistory) => {
       const newHistory = [...new Set([...validAddresses, ...prevHistory])];
       return newHistory.slice(0, 20);
