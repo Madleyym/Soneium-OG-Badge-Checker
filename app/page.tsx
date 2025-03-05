@@ -914,7 +914,7 @@ export default function BadgeChecker() {
                 ref={addressInputRef}
                 value={addresses}
                 onChange={(e) => setAddresses(e.target.value)}
-                placeholder="wallet addresses (one per line)&#10;Example: 0x0..00"
+                placeholder="wallet addresses (one per line)&#10;Example: 0x"
                 className="w-full h-24 sm:h-36 p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 outline-none resize-none font-mono text-xs sm:text-sm shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 disabled={isChecking}
                 style={{ fontSize: isMobile ? "12px" : "" }}
