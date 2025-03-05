@@ -312,6 +312,137 @@ const FAQ: React.FC = () => {
             </div>
           </details>
 
+          {/* NEW Question - How to view/import my badges */}
+          <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
+            <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2 px-1">
+              <span className="pr-6">
+                How can I view my badges in my wallet?
+              </span>
+              <span className="transition-transform group-open/item:rotate-180 flex-shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-3 w-3 text-gray-500 dark:text-gray-400"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+            </summary>
+            <div className="mt-2 px-1 text-justify">
+              <p className="mb-3">
+                You can import your badges to any wallet supporting NFTs using
+                the following details:
+              </p>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                  Badge Contract Information:
+                </h4>
+
+                <div className="space-y-3">
+                  <div className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <p className="font-medium text-gray-600 dark:text-gray-300 mb-1">
+                      Contract Address:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs sm:text-sm bg-gray-100 dark:bg-gray-900 p-1 px-2 rounded font-mono break-all">
+                        0xEE70e6d461F0888Fd9DB60cb5B2e933adF5f4c7C
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            "0xEE70e6d461F0888Fd9DB60cb5B2e933adF5f4c7C"
+                          );
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                        title="Copy to clipboard"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-3.5 w-3.5"
+                        >
+                          <rect
+                            x="9"
+                            y="9"
+                            width="13"
+                            height="13"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">
+                        OG Badge:
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Token ID:
+                        </span>
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                          0
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-amber-50 dark:bg-amber-900/30 p-2 rounded-lg border border-amber-100 dark:border-amber-800">
+                      <p className="font-medium text-amber-700 dark:text-amber-300 mb-1">
+                        Premium OG Badge:
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Token ID:
+                        </span>
+                        <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                          1
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-100 dark:border-green-800">
+                    <p className="font-medium text-green-700 dark:text-green-300 mb-1">
+                      How to import:
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+                      <li>Go to your wallet's NFT section</li>
+                      <li>Select "Import NFT" or similar option</li>
+                      <li>Enter the contract address above</li>
+                      <li>Enter Token ID (1 for Premium, 2 for OG)</li>
+                      <li>Confirm import</li>
+                    </ol>
+                  </div>
+
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Note: These are Soulbound tokens (non-transferable) that
+                    permanently recognize your contribution to the Soneium
+                    ecosystem.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </details>
+
           {/* Question 6 */}
           <details className="group/item border-b border-gray-200 dark:border-gray-700 pb-2">
             <summary className="flex justify-between items-center cursor-pointer font-medium text-gray-700 dark:text-gray-300 py-2 px-1">
