@@ -12,7 +12,6 @@ const BRIDGE_CONTRACTS = {
   ASTAR_CCIP: "0xE01338496c8b07490Ae642AF53AAa5A8e6645B4C",
 };
 
-// Badge NFT contract address - verified contract address on Soneium
 const BADGE_CONTRACT = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d";
 
 // Minimum requirements
@@ -37,7 +36,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // Normalize address for case-insensitive comparison
   const normalizedAddress = address.toLowerCase();
 
   try {
@@ -71,12 +69,8 @@ export async function GET(request: Request) {
     let bridgeActivity = [];
 
     if (isEligible) {
-      // In a real implementation, we would check for bridge transactions
-      // For now we'll skip this complex logic
     }
 
-    // Check if the address actually owns any badges
-    // Direct NFT ownership check using token-specific endpoint
     const ownsBadges = await checkBadgeOwnership(normalizedAddress);
 
     // Return results with badge ownership information
@@ -111,11 +105,10 @@ export async function GET(request: Request) {
         },
       },
       { status: 503 }
-    ); // Service Unavailable - menandakan bahwa layanan sementara tidak tersedia
+    );
   }
 }
 
-// Improved badge ownership checking function that handles multiple NFT detection methods
 async function checkBadgeOwnership(address: string) {
   // Default result
   let result = {
@@ -155,8 +148,6 @@ async function checkBadgeOwnership(address: string) {
       }
     }
 
-    // Method 2: If method 1 failed, try direct token balance check
-    // This is a fallback in case the first method doesn't detect badges
     if (!result.ogBadge && !result.premiumBadge) {
       const ogBalanceUrl = `https://soneium.blockscout.com/api?module=account&action=tokenbalance&contractaddress=${BADGE_CONTRACT}&address=${address}&tokenid=0`;
       const premiumBalanceUrl = `https://soneium.blockscout.com/api?module=account&action=tokenbalance&contractaddress=${BADGE_CONTRACT}&address=${address}&tokenid=1`;
