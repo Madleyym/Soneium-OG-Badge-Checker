@@ -94,7 +94,6 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error("API Error:", error);
 
-    // Jangan "mengarang" data - informasikan pengguna bahwa data tidak tersedia
     return NextResponse.json(
       {
         found: false,
@@ -102,10 +101,10 @@ export async function GET(request: Request) {
         premium: false,
         premiumReason: "",
         _source: "api_error",
-        _error:
-          error.message ||
-          "API call failed - transaksi tidak dapat diverifikasi",
-        _recoverable: true, // Flag bahwa pengguna bisa mencoba lagi nanti
+        _error: "Service temporarily unavailable",
+        _recoverable: true,
+        message:
+          "This address likely has no transactions or the API service is experiencing issues",
         badges: {
           ogBadge: false,
           premiumBadge: false,
