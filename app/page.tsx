@@ -4,6 +4,7 @@ import { AlertCircle } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import BadgeStatus from "./components/BadgeStatus";
 import Image from "next/image";
+import Link from "next/link";
 import {
   CheckCircle,
   XCircle,
@@ -28,6 +29,9 @@ import {
 } from "lucide-react";
 import Footer from "./components/sections/UI/Footer";
 import FAQ from "./components/sections/FAQ";
+// Import komponen Astar Surge
+import AstarSurgePromo from "./astar/components/AstarSurgePromo";
+
 const Icons = {
   CheckCircle,
   XCircle,
@@ -719,6 +723,45 @@ export default function BadgeChecker() {
               <div className="mt-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-2 text-xs text-green-800 dark:text-green-300 flex items-center justify-center text-center">
                 <Icons.Gift className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span>Distribution complete! Check your badges ASAP!</span>
+              </div>
+            </div>
+          </div>
+          <div className="mb-2">
+            <div className="w-full p-3 sm:p-4 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 text-white rounded-xl shadow-md">
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex items-center space-x-2.5">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-white/15 rounded-lg flex items-center justify-center shrink-0">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      className="text-white"
+                    >
+                      <path
+                        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-sm sm:text-base truncate">
+                      Astar Surge is Live!
+                    </h3>
+                    <p className="text-xs sm:text-sm opacity-80 mt-0.5 truncate">
+                      Check Your Staking Status!
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/astar"
+                  className="shrink-0 px-2.5 py-1.5 sm:px-3.5 sm:py-2 bg-blue-500/30 hover:bg-blue-500/40 dark:bg-blue-600/40 dark:hover:bg-blue-600/50 rounded-lg transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
+                >
+                  Check Status
+                </Link>
               </div>
             </div>
           </div>
@@ -1469,17 +1512,13 @@ export default function BadgeChecker() {
                           received)
                         </span>
                       </div>
-                      <div className="flex items-center">
-                        {/* <div className="h-3 w-3 bg-gray-200 dark:bg-gray-600 rounded mr-1"></div>
-                        <span>Regular OG Badge</span> */}
-                      </div>
+                      <div className="flex items-center"></div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
           )}
-          {/* Add Footer component here, before the closing div */}
           <FAQ />
           <Footer />{" "}
         </div>
